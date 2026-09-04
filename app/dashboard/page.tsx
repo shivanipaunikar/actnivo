@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { ActnivoMark } from "../../components/brand/ActnivoMark";
 
 type ActionState = "pending" | "executing" | "done";
 
@@ -81,7 +82,7 @@ export default function Home() {
   return (
     <main className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">A</span><span>actnivo</span></div>
+        <div className="brand"><span className="brand-mark"><ActnivoMark /></span><span>actnivo</span></div>
         <p className="workspace-label">WORKSPACE</p>
         <button className="workspace"><span className="store-avatar">N</span><span><b>Nourish & Co.</b><small>India · D2C</small></span><span>⌄</span></button>
         <nav>
@@ -100,7 +101,7 @@ export default function Home() {
 
       <section className="content">
         <header className="topbar">
-          <div className="mobile-brand"><span className="brand-mark">A</span>actnivo</div>
+          <div className="mobile-brand"><span className="brand-mark"><ActnivoMark /></span>actnivo</div>
           <div className="sync"><span className="pulse-dot" /> Live operations</div>
           <div className="top-actions"><button aria-label="Search">⌕</button><button aria-label="Notifications" className="has-alert">♢</button><button className="range-button">4 Sep 2026</button></div>
         </header>

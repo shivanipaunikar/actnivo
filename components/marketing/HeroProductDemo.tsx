@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
+import { ActnivoMark } from "../brand/ActnivoMark";
 
 const states = ["detected", "risk", "recommend", "ready", "executing", "created", "protected"] as const;
 
@@ -19,7 +20,7 @@ export function HeroProductDemo() {
     <div className="product-window">
       <div className="window-bar"><i/><i/><i/><span>Today’s operations</span><em>Live</em></div>
       <div className="demo-body">
-        <div className="demo-sidebar"><b>A</b>{[1,2,3,4,5].map(i=><i key={i}/>)}</div>
+        <div className="demo-sidebar"><b><ActnivoMark /></b>{[1,2,3,4,5].map(i=><i key={i}/>)}</div>
         <div className="demo-content">
           <div className="demo-heading"><div><small>THURSDAY, 11:42 AM</small><h3>Today’s operations</h3></div><span>9 channels connected</span></div>
           <div className="demo-metrics">
