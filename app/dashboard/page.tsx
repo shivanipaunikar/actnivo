@@ -16,10 +16,10 @@ const nav = [
 ] as const;
 
 const channels = [
-  { name: "Shopify", sales: "₹4.26L", orders: 812, share: 68, color: "#6c5ce7", delta: "+18.2%" },
-  { name: "Amazon", sales: "₹2.18L", orders: 436, share: 48, color: "#ff9900", delta: "+6.4%" },
-  { name: "Blinkit", sales: "₹1.44L", orders: 389, share: 38, color: "#f6c344", delta: "+24.1%" },
-  { name: "Flipkart", sales: "₹92.6K", orders: 206, share: 28, color: "#2874f0", delta: "−3.8%" },
+  { name: "Shopify", sales: "₹4.26L", orders: 812, share: 68, color: "var(--primary)", delta: "+18.2%" },
+  { name: "Amazon", sales: "₹2.18L", orders: 436, share: 48, color: "var(--primary-light)", delta: "+6.4%" },
+  { name: "Blinkit", sales: "₹1.44L", orders: 389, share: 38, color: "var(--chart-neutral)", delta: "+24.1%" },
+  { name: "Flipkart", sales: "₹92.6K", orders: 206, share: 28, color: "var(--graphite)", delta: "−3.8%" },
 ] as const;
 
 const trend = [34, 31, 42, 36, 48, 44, 55, 52, 63, 58, 74, 67, 82, 77, 88, 92, 85, 96];
