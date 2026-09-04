@@ -20,8 +20,11 @@
   --brand-blue:#2855E7;
   --primary:#252422;
   --primary-hover:#0B0B0C;
-  --primary-light:#77716B;
-  --primary-soft:#F0ECE6;
+  --primary-light:#D2B48A;
+  --primary-soft:#F5EBDD;
+  --accent-warm:#C49A68;
+  --accent-warm-deep:#855F38;
+  --accent-warm-soft:#F5EBDD;
   --success:#536A28;
   --success-soft:#EEF2E5;
   --warning:#B76A20;
@@ -38,7 +41,7 @@
   --color-surface:var(--surface-elevated);
   --color-muted:var(--text-secondary);
   --color-border:var(--border);
-  --color-accent:var(--primary);
+  --color-accent:var(--accent-warm-deep);
 
   /* Compatibility aliases used by the operations dashboard */
   --ink:var(--foreground);
@@ -49,7 +52,7 @@
   --mint:var(--success-soft);
   --orange:var(--warning);
   --red:var(--danger);
-  --accent:var(--primary);
+  --accent:var(--accent-warm-deep);
   --blue:var(--primary);
   --panel:var(--surface-elevated);
 }
@@ -126,12 +129,12 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .pulse-dot{background:var(--success);box-shadow:0 0 0 4px rgba(83,106,40,.2)}
 .topbar{background:rgba(251,247,241,.88);border-color:var(--border);box-shadow:0 1px 0 rgba(34,30,25,.02)}
 .welcome-row h1,.metric strong,.section-heading h2,.panel-title h2,.quick-stats strong{color:var(--foreground)}
-.kicker,.section-heading button,.panel-title button{color:var(--primary)}
+.kicker,.section-heading button,.panel-title button{color:var(--accent-warm-deep)}
 .range-tabs{background:var(--neutral-soft)}
 .range-tabs button.selected{color:var(--foreground);box-shadow:var(--shadow-soft)}
 .agent-strip{border-color:var(--border);background:var(--primary-soft);box-shadow:none}
 .agent-spark,.approve{background:var(--primary);color:var(--background-white);box-shadow:none}
-.strip-link{color:var(--primary)}
+.strip-link{color:var(--accent-warm-deep)}
 .metric,.panel,.activity,.action-card{border-color:var(--border);box-shadow:var(--shadow-soft)}
 .metric.danger{background:var(--danger-soft);border-color:#F1CFCA}.metric.danger strong,.impact strong,.down{color:var(--danger)!important}
 .metric.protected{background:var(--success-soft);border-color:#DDE5CC}.metric.protected strong,.up{color:var(--success)!important}
@@ -139,7 +142,7 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .section-heading em,.alert-orb{background:var(--danger-soft);color:var(--danger)}
 .action-card{border-left-color:var(--warning)}.action-card.critical{border-left-color:var(--danger)}
 .action-icon{background:var(--danger-soft);color:var(--danger)}
-.recommendation{background:var(--primary-soft);border-color:var(--border)}.recommendation>span{color:var(--primary)}
+.recommendation{background:var(--accent-warm-soft);border-color:var(--border)}.recommendation>span{color:var(--accent-warm-deep)}
 .done,.check,.healthy,.activity-row em{background:var(--success-soft);color:var(--success)}
 .watch{background:var(--warning-soft);color:var(--warning)}
 .wh-icon,.quick-stats>div{background:var(--neutral-soft);color:var(--graphite)}
@@ -150,11 +153,11 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .marketing-page{background:var(--background);color:var(--foreground)}
 .marketing-section{background:var(--background)}
 .marketing-section:nth-of-type(even){background:var(--background-white)}
-.marketing-eyebrow{color:var(--primary)}
+.marketing-eyebrow{color:var(--accent-warm-deep)}
 .marketing-eyebrow.light{color:var(--primary-light)}
 .section-title span{color:var(--text-muted)}
 .section-copy,.hero-sub{color:var(--text-secondary)}
-.accent-text{color:var(--primary)}
+.accent-text{color:var(--accent-warm-deep)}
 .button,.issue-detail>button,.chat-actions .execute{background:var(--primary);color:var(--background-white)!important;box-shadow:none}
 .button:hover{background:var(--primary-hover)}
 .text-link,.final-cta nav>a:last-child{color:var(--foreground)}
@@ -168,7 +171,7 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .brand-mark{padding:4px;background:var(--background-white);transform:none}
 .brand-mark>.actnivo-mark{width:100%;height:100%}
 .marketing-nav>nav a,.nav-actions>a:first-child{color:var(--text-body)}
-.marketing-nav>nav a:hover{color:var(--primary)}
+.marketing-nav>nav a:hover{color:var(--accent-warm-deep)}
 
 /* Hero and restrained product mockups */
 .hero,.final-cta{background:var(--background)}
@@ -188,39 +191,39 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .demo-metrics .metric-safe{background:var(--success-soft)}
 .demo-issue{background:var(--background-white);border-color:#F1CFCA;border-left-color:var(--danger)}
 .demo-issue.complete{border-color:#DDE5CC;border-left-color:var(--success)}
-.channel-chip{background:var(--primary-soft);color:var(--primary)}
+.channel-chip{background:var(--accent-warm-soft);color:var(--accent-warm-deep)}
 .issue-footer button{background:var(--primary);color:var(--background-white)}
 .platform-section{background:var(--background-white);border-color:var(--border-subtle)}
 .platform-section p,.marquee span{color:var(--text-secondary)}
 .capability-card:hover{border-color:var(--graphite);box-shadow:var(--shadow-soft)}
 .capability-card small,.capability-card p{color:var(--text-muted)}
-.capability-card>span{color:var(--primary)}
+.capability-card>span{color:var(--accent-warm-deep)}
 
 /* Editorial story becomes a light interlude; dark is reserved for AI and API */
 .story-section{background:var(--surface);color:var(--foreground)}
 .story-intro>p{color:var(--text-secondary)}
-.story-intro h2 span{color:var(--primary)}
-.story-progress>i{background:var(--primary)}
-.story-progress span{color:var(--primary)}
+.story-intro h2 span{color:var(--accent-warm-deep)}
+.story-progress>i{background:var(--accent-warm)}
+.story-progress span{color:var(--accent-warm-deep)}
 .story-cards article{background:var(--background-white);color:var(--foreground);border:1px solid var(--border);box-shadow:var(--shadow-soft)}
-.story-cards article>small{color:var(--primary)}
+.story-cards article>small{color:var(--accent-warm-deep)}
 .story-cards p{color:var(--text-secondary)}
-.story-ui>span,.story-ui>em{background:var(--primary-soft);color:var(--primary)}
+.story-ui>span,.story-ui>em{background:var(--accent-warm-soft);color:var(--accent-warm-deep)}
 .story-ui>div{background:var(--border)}
-.story-ui>div i{background:var(--primary)}
+.story-ui>div i{background:var(--accent-warm)}
 
 /* Ops inbox: status color is limited to semantic accents */
 .inbox-top,.issue-list,.issue-list>button{border-color:var(--border-subtle)}
 .inbox-top button{color:var(--text-muted)}
-.inbox-top button.active{background:var(--primary-soft);color:var(--primary)}
+.inbox-top button.active{background:var(--accent-warm-soft);color:var(--accent-warm-deep)}
 .inbox-top>span{color:var(--danger);background:var(--danger-soft)}
-.issue-list>button.selected{background:var(--primary-soft);border-color:var(--border)}
+.issue-list>button.selected{background:var(--accent-warm-soft);border-color:var(--border)}
 .issue-list>button>i.critical{background:var(--danger)}
 .issue-list>button>i.warning{background:var(--warning)}
 .issue-list span small,.issue-list span em{color:var(--text-muted)}
 .issue-list>button>strong{color:var(--danger)}
 .issue-detail{background:var(--surface)}
-.issue-detail>p:first-child{color:var(--primary)}
+.issue-detail>p:first-child{color:var(--accent-warm-deep)}
 .impact-box{border-color:#F1CFCA;background:var(--danger-soft)}
 .impact-box strong{color:var(--danger)}
 
@@ -242,10 +245,10 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 
 /* Quick-commerce network */
 .q-platforms span{border-color:var(--border)}
-.q-platforms i,.flow-caption span,.network-node span,.dark-node b{color:var(--primary)}
+.q-platforms i,.flow-caption span,.network-node span,.dark-node b{color:var(--accent-warm-deep)}
 .network-panel{background:var(--surface);border-color:var(--border)}
 .network-line{stroke:var(--chart-neutral)}
-.flow-dot{fill:var(--primary);filter:none}
+.flow-dot{fill:var(--accent-warm);filter:none}
 .network-node small{color:var(--text-muted)}
 .dark-node{background:var(--neutral-soft);color:var(--foreground)}
 
@@ -258,7 +261,7 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .policy-list span{color:var(--text-disabled)}
 .policy-list em{color:var(--text-secondary)}
 .policy-list .auto{background:var(--success-soft);color:var(--success)}
-.policy-list .manual{background:var(--primary-soft);color:var(--primary)}
+.policy-list .manual{background:var(--accent-warm-soft);color:var(--accent-warm-deep)}
 .policy-foot{background:var(--surface)}
 .policy-foot>span{color:var(--success)}
 .policy-foot small{color:var(--text-secondary)}
@@ -266,9 +269,9 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 /* Integration map is neutral with blue system activity */
 .integrations-section{background:var(--background-white);color:var(--foreground)}
 .integrations-section .section-title.light{color:var(--foreground)}
-.integrations-section .marketing-eyebrow.light{color:var(--primary)}
+.integrations-section .marketing-eyebrow.light{color:var(--accent-warm-deep)}
 .integration-map{background:var(--surface);border-color:var(--border)}
-.connector-lines path{stroke:var(--graphite)}
+.connector-lines path{stroke:var(--accent-warm)}
 .central-node{border-color:var(--border);background:var(--background-white);box-shadow:0 0 0 25px rgba(11,11,12,.04)}
 .central-node>.actnivo-mark{width:42px;height:42px}
 .central-node small{color:var(--text-muted)}
@@ -278,10 +281,10 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 .value-head,.value-grid article{border-color:var(--border)}
 .value-head small,.value-grid article>small{color:var(--text-muted)}
 .value-grid article>em{color:var(--success)}
-.value-primary>strong{color:var(--primary)}
+.value-primary>strong{color:var(--foreground)}
 .value-primary p{color:var(--text-secondary)}
 .value-chart i{background:var(--primary)}
-.value-chart i:nth-child(3n){background:var(--primary-light)}
+.value-chart i:nth-child(3n){background:var(--accent-warm)}
 .example-label{background:var(--surface);color:var(--text-muted)}
 
 /* Developer surface */
@@ -296,7 +299,7 @@ nav em{background:var(--primary-light);color:var(--foreground)}
 
 /* Closing rhythm */
 .final-cta p,.final-cta>div>div{color:var(--text-secondary)}
-.final-cta h2 span{color:var(--primary)}
+.final-cta h2 span{color:var(--accent-warm-deep)}
 .marketing-footer{background:var(--background-white);border-color:var(--border)}
 .footer-main>div>p,.footer-main a:not(.footer-brand),.footer-bottom{color:var(--text-secondary)}
 .footer-bottom{border-color:var(--border-subtle)}
