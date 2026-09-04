@@ -9,10 +9,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const origin = `${protocol}://${host}`;
 
   return {
-    title: "Actnivo — AI Commerce Operations",
-    description: "The AI operating system for Indian D2C commerce operations.",
+    title: "Actnivo — Your commerce operations, running themselves",
+    description: "Actnivo connects every commerce channel, finds what is costing you money and executes the fix.",
     openGraph: {
-      title: "Actnivo — AI Commerce Operations",
+      title: "Actnivo — Your commerce operations, running themselves",
       description: "Detect problems, protect revenue and execute the fix.",
       images: [{ url: `${origin}/og.png`, width: 1200, height: 630, alt: "Actnivo AI commerce operations" }],
     },

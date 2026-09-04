@@ -1,0 +1,8 @@
+"use client";
+
+import { motion } from "motion/react";
+import { useState } from "react";
+import { Reveal } from "../motion/Reveal";
+
+const policies = [["Inventory mismatch","≤ 5 units","AUTO FIX"],["Replenishment","≤ ₹10,000","AUTO APPROVE"],["Large inventory movement","> ₹25,000","OWNER APPROVAL"]];
+export function AutopilotDemo(){const[active,setActive]=useState(false);return <section className="marketing-section section-shell autopilot-section" id="pricing"><Reveal><p className="marketing-eyebrow">CONTROL</p><h2 className="section-title">Approve everything.<br/><span>Or nothing.</span></h2><p className="section-copy">Set the limits. Actnivo operates inside them.</p></Reveal><Reveal variant="scale" className={`policy-panel ${active?"is-active":""}`}><div className="policy-head"><div><small>AUTOMATION POLICY</small><h3>{active?"Autopilot Active":"Suggestions Only"}</h3></div><button onClick={()=>setActive(!active)} className={active?"on":""} aria-label="Toggle autopilot"><motion.i layout transition={{type:"spring",stiffness:420,damping:32}}/></button></div><div className="policy-list">{policies.map(([title,limit,status],index)=><div key={title}><span>{String(index+1).padStart(2,"0")}</span><b>{title}</b><em>{limit}</em><strong className={status.includes("OWNER")?"manual":"auto"}>{active&&index<2?status:"REVIEW"}</strong></div>)}</div><div className="policy-foot"><span>✦</span><p><b>You stay in control.</b><small>{active?"2 policies can now execute safely without approval.":"Actnivo will recommend actions and wait for approval."}</small></p></div></Reveal></section>}
