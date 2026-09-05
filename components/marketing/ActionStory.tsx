@@ -1,37 +1,24 @@
-"use client";
-
-import dynamic from "next/dynamic";
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
-import { useRef, useState } from "react";
-
-const ScrollScene = dynamic(() => import("../three/ScrollScene").then(module => module.ScrollScene), { ssr:false, loading:() => <div className="scroll-scene-loading"/> });
+import { Reveal } from "../motion/Reveal";
+import { Stagger, StaggerItem } from "../motion/Stagger";
 
 const stages = [
-  { n:"01", name:"Detect", title:"Blinkit stockout detected.", detail:"Vitamin C Serum · Bangalore", metric:"43 units remain", outcome:"A live operational signal becomes a prioritized issue." },
-  { n:"02", name:"Predict", title:"Stockout in 1.4 days.", detail:"Demand velocity increased 37% above forecast.", metric:"₹28,400 at risk", outcome:"Actnivo calculates what happens next—and what it will cost." },
-  { n:"03", name:"Act", title:"Move 70 units.", detail:"Mumbai → Bangalore", metric:"Best safe action", outcome:"The right inventory route activates for approval." },
-  { n:"04", name:"Automate", title:"Transfer TR-83922 created.", detail:"Within approved automation policy.", metric:"Action executing", outcome:"Safe actions move without adding operational work." },
-  { n:"05", name:"Verify", title:"Inventory restored.", detail:"Bangalore FC · 43 → 113 units", metric:"₹27,900 protected", outcome:"Actnivo verifies the result and records the value created." },
+  { n:"01", title:"Blinkit stockout detected.", detail:"Vitamin C Serum · Bangalore", label:"STOCK REMAINING", value:"43 units", outcome:"Inventory will run out tomorrow.", tag:"DETECT · PROBLEM FOUND" },
+  { n:"02", title:"Demand increased 37%.", detail:"Demand velocity is above the seven-day forecast.", label:"EXPECTED STOCKOUT", value:"1.4 days", outcome:"₹28,400 revenue at risk", tag:"DIAGNOSE · CAUSE EXPLAINED" },
+  { n:"03", title:"Move 70 units.", detail:"Mumbai → Bangalore", label:"RECOMMENDED ACTION", value:"70 units", outcome:"Protect sales without creating a second stockout.", tag:"EXECUTE · ACTION READY", action:"Approve" },
+  { n:"04", title:"Transfer completed.", detail:"Inventory increased at Bangalore FC.", label:"INVENTORY", value:"43 → 113 units", outcome:"₹28,400 protected", tag:"VERIFY · OUTCOME VERIFIED" },
 ];
 
 export function ActionStory() {
-  const ref = useRef<HTMLElement>(null);
-  const [active,setActive] = useState(0);
-  const { scrollYProgress } = useScroll({ target:ref, offset:["start start","end end"] });
-  useMotionValueEvent(scrollYProgress,"change",value => setActive(Math.min(stages.length-1,Math.floor(value*stages.length))));
-  const stage = stages[active];
-
-  return <section className="story-section story-3d-section" ref={ref} id="product"><div className="story-3d-sticky section-shell">
-    <div className="workflow-head"><p className="marketing-eyebrow">THE ACTNIVO WORKFLOW</p><h2>Detect. Predict. Act.<br/><span>Automate. Verify.</span></h2></div>
-    <div className="story-3d-layout">
-      <div className="story-scene-wrap"><ScrollScene phase={active}/><div className="story-depth-labels" aria-hidden="true"><span>DATA</span><span>INTELLIGENCE</span><span>ACTION</span></div></div>
-      <div className="story-stage-panel">
-        <div className="story-stage-nav">{stages.map((item,index)=><span className={index===active?"active":""} key={item.n}><small>{item.n}</small>{item.name}</span>)}</div>
-        <AnimatePresence mode="wait"><motion.div className="story-stage-copy" key={stage.n} initial={{opacity:0,y:18,filter:"blur(5px)"}} animate={{opacity:1,y:0,filter:"blur(0px)"}} exit={{opacity:0,y:-12,filter:"blur(4px)"}} transition={{duration:.45}}><small>{stage.name.toUpperCase()}</small><h3>{stage.title}</h3><p>{stage.detail}</p><strong>{stage.metric}</strong><div><i/>{stage.outcome}</div></motion.div></AnimatePresence>
-      </div>
-    </div>
-    <div className="story-scroll-progress"><motion.i style={{scaleX:scrollYProgress}}/><span>{active+1} / {stages.length}</span></div>
-  </div>
-  <div className="story-mobile-list section-shell">{stages.map(item=><article key={item.n}><small>{item.n} · {item.name}</small><h3>{item.title}</h3><p>{item.detail}</p><strong>{item.metric}</strong></article>)}</div>
-  </section>;
+  return <section className="marketing-section story-section" id="product"><div className="section-shell story-static">
+    <Reveal className="workflow-head"><p className="marketing-eyebrow">THE ACTNIVO WORKFLOW</p><h2>Detect. Diagnose.<br/><span>Execute. Verify.</span></h2></Reveal>
+    <Stagger className="story-cards story-cards-static">
+      {stages.map((stage,index)=><StaggerItem className="story-card-static" key={stage.n}>
+        <div className="story-card-head"><small>{stage.tag}</small><span>{stage.n} / 04</span></div>
+        <h3>{stage.title}</h3><p>{stage.detail}</p>
+        <div className="story-metric"><small>{stage.label}</small><strong>{stage.value}</strong></div>
+        <div className={`story-outcome ${index === 1 ? "risk" : index === 3 ? "success" : ""}`}><i/>{stage.outcome}</div>
+        {stage.action&&<button>{stage.action}<span>→</span></button>}
+      </StaggerItem>)}
+    </Stagger>
+  </div></section>;
 }
