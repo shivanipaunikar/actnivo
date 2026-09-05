@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(path = "/") {
@@ -51,6 +52,15 @@ test("keeps pricing on its own route", async () => {
   assert.match(html, /Starter/);
   assert.match(html, /Growth/);
   assert.match(html, /Pro/);
+});
+
+test("uses the unified Actnivo technical palette", async () => {
+  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /--primary:#5B55F7/);
+  assert.match(css, /--cyan:#4AC7E8/);
+  assert.match(css, /--mint:#5ED6AE/);
+  assert.match(css, /--dark-surface:#121217/);
+  assert.doesNotMatch(css, /#(?:C49A68|D2B48A|855F38|FBF7F1|111a4a|0d153c|152756|182453|59c59d|4fc49a)/i);
 });
 
 test("keeps the operations dashboard available", async () => {

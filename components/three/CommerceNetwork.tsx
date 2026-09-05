@@ -5,11 +5,11 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
-const BLUE = "#3568e8";
-const GRAPHITE = "#373635";
-const WARM = "#d2b48a";
-const OFF_WHITE = "#f7f2eb";
-const SUCCESS = "#6f8738";
+const BLUE = "#5b55f7";
+const GRAPHITE = "#29292f";
+const WARM = "#4ac7e8";
+const OFF_WHITE = "#f7f7fa";
+const SUCCESS = "#2ea66f";
 
 const nodes = [
   { name: "AMAZON", position: [-2.35, 1.05, -.65] as [number,number,number] },
