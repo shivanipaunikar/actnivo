@@ -639,3 +639,16 @@ nav em{background:var(--primary);color:var(--background-white)}
   .autopilot-spotlight{height:auto;min-height:0}.autopilot-sticky{position:relative;min-height:0;padding:92px 0;overflow:visible}.autopilot-pipeline{margin-top:10px}.autopilot-pipeline:after{height:calc(100% - 116px)}.pipeline-step{grid-template-columns:34px 1fr}.pipeline-step b{grid-column:2;text-align:left}.pipeline-step.waiting>span i{border-color:var(--primary);background:var(--primary)}
 }
 @media(prefers-reduced-motion:reduce){.forecast-line i{animation:none}.autopilot-spotlight{height:auto;min-height:0}.autopilot-sticky{position:relative}.autopilot-pipeline:after{height:calc(100% - 116px)}}
+
+/* Center the desktop hero copy above the product demonstration. */
+@media(min-width:1101px){
+  .hero{min-height:auto;padding-top:155px;padding-bottom:110px;display:flex;flex-direction:column;align-items:center;gap:68px}
+  .hero-copy{width:100%;max-width:1280px;text-align:center}
+  .hero-copy h1{white-space:nowrap;font-size:clamp(38px,4.15vw,62px);line-height:1;letter-spacing:-.055em}
+  .hero-copy h1 .text-mask{display:inline-block}
+  .hero-copy h1 .text-mask:not(:last-child){margin-right:.18em}
+  .hero-sub{max-width:760px;margin:26px auto 22px}
+  .hero-actions,.hero-copy>small{justify-content:center}
+  .hero-visual{width:min(1120px,92%);margin:18px auto 0}
+  .hero-demo-wrap{padding:20px 36px 55px}
+}
