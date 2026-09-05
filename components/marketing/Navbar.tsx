@@ -11,7 +11,7 @@ export function Navbar() {
     <a className="marketing-brand" href="#top" aria-label="Actnivo home"><ActnivoMark />actnivo</a>
     <button className="nav-toggle" onClick={() => setOpen(!open)} aria-label="Toggle navigation" aria-expanded={open}>☰</button>
     <nav className={open ? "nav-open" : ""}>
-      <a href="#product">Product</a><a href="#solutions">Solutions</a><a href="#integrations">Integrations</a><a href="#pricing">Pricing</a><a href="#developers">Developers</a>
+      <a href="#product">Product</a><a href="#autopilot">Autopilot</a><a href="#integrations">Integrations</a><a href="/pricing">Pricing</a><a href="#developers">Developers</a>
     </nav>
     <div className="nav-actions"><a href="/dashboard">Sign in</a><a className="button button-small" href="#start">Start Free</a></div>
   </header>;

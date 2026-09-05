@@ -15,29 +15,23 @@ test("server-renders the Actnivo marketing homepage", async () => {
   assert.match(html, /Your commerce/);
   assert.match(html, /running themselves/);
   assert.match(html, /Actnivo/);
-  assert.match(html, /fixes it/);
-  assert.match(html, /Most commerce software tells you/);
-  assert.match(html, /needs to happen next/);
-  assert.match(html, /Detect\. Diagnose/);
-  assert.match(html, /Execute\. Verify/);
-  assert.match(html, /Ask your/);
-  assert.match(html, /business/);
-  assert.match(html, /Built as an execution layer/);
+  assert.match(html, /Built for action/);
+  assert.match(html, /Intelligent by design/);
+  assert.match(html, /Detect/);
+  assert.match(html, /PREDICT/);
+  assert.match(html, /AUTOMATE/);
+  assert.match(html, /Built as infrastructure/);
+  assert.doesNotMatch(html, /SIMPLE PRICING/);
   const homepageFlow = [
     "AI COMMERCE OPERATIONS",
-    "WHY ACTNIVO",
-    "THE ACTNIVO WORKFLOW",
-    "OPS INBOX",
-    "FINANCIAL PRIORITY",
-    "ACTNIVO AI",
-    "ACTNIVO ON WHATSAPP",
+    "PLATFORMS &amp; INTEGRATIONS",
+    "THE ACTION PLATFORM",
+    "Automate the operations you trust.",
+    "SPOTLIGHT · ASK ACTNIVO",
     "QUICK COMMERCE",
-    "CONTROL",
-    "ACTION VERIFICATION",
-    "CONNECTED OPERATIONS",
-    "VALUE GENERATED",
-    "INFRASTRUCTURE",
-    "SIMPLE PRICING",
+    "CONNECTED INFRASTRUCTURE",
+    "ONE OPERATING SYSTEM",
+    "PRODUCT CONCEPT · API PREVIEW",
     "Commerce is complicated.",
   ];
   let previousIndex = -1;
@@ -47,6 +41,16 @@ test("server-renders the Actnivo marketing homepage", async () => {
     previousIndex = sectionIndex;
   }
   assert.doesNotMatch(html, /codex-preview/);
+});
+
+test("keeps pricing on its own route", async () => {
+  const response = await render("/pricing");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /SIMPLE PRICING/);
+  assert.match(html, /Starter/);
+  assert.match(html, /Growth/);
+  assert.match(html, /Pro/);
 });
 
 test("keeps the operations dashboard available", async () => {
