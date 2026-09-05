@@ -6,9 +6,14 @@ import { ActnivoMark } from "../brand/ActnivoMark";
 
 const states = ["detected", "risk", "recommend", "ready", "executing", "created", "protected"] as const;
 
-export function HeroProductDemo() {
-  const [step, setStep] = useState(0);
-  useEffect(() => { const timer = window.setInterval(() => setStep((value) => (value + 1) % states.length), 1300); return () => window.clearInterval(timer); }, []);
+export function HeroProductDemo({ phase }: { phase?:number }) {
+  const [localStep, setLocalStep] = useState(0);
+  useEffect(() => {
+    if (phase !== undefined) return;
+    const timer = window.setInterval(() => setLocalStep((value) => (value + 1) % states.length), 1300);
+    return () => window.clearInterval(timer);
+  }, [phase]);
+  const step = phase === undefined ? localStep : ([0,1,2,3,4,6][phase] ?? 0);
   const state = states[step];
   const hasRisk = step >= 1;
   const hasRecommendation = step >= 2;
