@@ -387,6 +387,43 @@ nav em{background:var(--primary-light);color:var(--foreground)}
   .phone-chat{min-height:455px;padding:18px 12px}.wa-message{padding:15px}.verification-step{padding:14px 12px;grid-template-columns:34px 1fr}.verification-step>i{left:27px}.value-grid .value-primary{grid-row:auto}
 }
 
+/* Stable narrative sections: no scroll traps, blank tails, or stacked slides */
+.problem-positioning{height:auto;position:relative;padding:130px 0;background:var(--background-white)}
+.problem-copy{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,.8fr);gap:48px;align-items:center;margin-top:58px}
+.problem-lead{margin:0;color:var(--text-secondary);font-size:clamp(38px,4.4vw,66px);font-weight:500;line-height:1.02;letter-spacing:-.055em}
+.problem-arrow{display:grid;place-items:center;width:48px;height:48px;border:1px solid var(--border);border-radius:50%;color:var(--accent-warm-deep);font-size:18px}
+.problem-answer{position:relative;inset:auto}
+.problem-answer h2{margin:0;color:var(--foreground);font-size:clamp(48px,5.7vw,84px);font-weight:500;line-height:.94;letter-spacing:-.065em}
+.problem-answer h2 span{display:block;color:var(--accent-warm-deep)}
+.problem-answer>p{margin:20px 0 0;color:var(--text-secondary);font-size:15px;line-height:1.5}
+.problem-examples{position:relative;left:auto;right:auto;bottom:auto;display:grid;grid-template-columns:repeat(3,1fr);margin-top:76px;border-top:1px solid var(--border)}
+.problem-example{display:grid;grid-template-columns:auto 1fr;gap:18px;padding:22px 28px 0 0;border-right:1px solid var(--border)}
+.problem-example+.problem-example{padding-left:28px}.problem-example:last-child{border-right:0}
+.problem-example>small{color:var(--accent-warm-deep);font-size:9px;letter-spacing:.12em}.problem-example b{display:block;font-size:13px}.problem-example p{margin:7px 0 0;color:var(--text-secondary);font-size:11px;line-height:1.5}
+
+.story-section{height:auto;padding:130px 0;background:var(--surface)}
+.story-static{width:min(1280px,calc(100% - 64px));margin-inline:auto}
+.story-cards.story-cards-static{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));height:auto;gap:12px;margin-top:52px}
+.story-cards.story-cards-static .story-card-static{position:relative;inset:auto;min-height:330px;padding:32px 34px;border:1px solid var(--border);border-radius:14px;background:var(--background-white);color:var(--foreground);box-shadow:var(--shadow-soft);opacity:1;transform:none}
+.story-cards.story-cards-static .story-card-static>p{margin:0;color:var(--text-secondary);font-size:13px;line-height:1.55}
+.story-cards.story-cards-static h3{margin:48px 0 10px;font-size:clamp(29px,3vw,43px)}
+.story-cards.story-cards-static .story-metric{margin-top:28px}
+.story-cards.story-cards-static .story-card-static>button{position:absolute;right:34px;bottom:27px;display:flex;align-items:center;gap:34px;padding:11px 14px;border:0;border-radius:7px;background:var(--primary);color:var(--background-white);font-size:10px;font-weight:700}
+
+@media(max-width:900px){
+  .problem-copy{grid-template-columns:1fr;gap:28px}.problem-arrow{transform:rotate(90deg)}
+  .problem-answer h2 span{display:inline}
+}
+
+@media(max-width:760px){
+  .problem-positioning,.story-section{padding:92px 0}
+  .problem-copy{margin-top:42px}.problem-lead{font-size:42px}.problem-answer h2{font-size:58px}
+  .problem-examples{grid-template-columns:1fr;margin-top:55px}.problem-example,.problem-example+.problem-example{padding:18px 0;border-right:0;border-bottom:1px solid var(--border)}
+  .story-static{width:min(100% - 32px,1280px)}
+  .story-cards.story-cards-static{grid-template-columns:1fr;margin-top:42px}
+  .story-cards.story-cards-static .story-card-static{min-height:330px;padding:28px}
+}
+
 /* Homepage narrative: integration → problem → workflow */
 .marquee{
   -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
