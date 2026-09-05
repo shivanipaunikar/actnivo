@@ -1,3 +1,8 @@
+"use client";
+
+import { useMotionValueEvent, useScroll } from "motion/react";
+import type { CSSProperties } from "react";
+import { useRef, useState } from "react";
 import { Reveal } from "../motion/Reveal";
 
 const steps = [
@@ -10,4 +15,11 @@ const steps = [
   ["07","Verified ✓","Outcome"],
 ];
 
-export function AutopilotSpotlight(){return <section className="autopilot-spotlight" id="autopilot"><div className="section-shell spotlight-layout"><Reveal><p className="marketing-eyebrow light">SPOTLIGHT</p><h2>ACTNIVO<br/><span>AUTOPILOT</span></h2><p>Automate the operations you trust.<br/>Keep approval over everything else.</p></Reveal><div className="autopilot-flow">{steps.map(([number,title,label],index)=><Reveal variant="slideLeft" className={`autopilot-flow-step ${index>3?"active":""}`} key={number}><span>{number}</span><small>{label}</small><b>{title}</b>{index<steps.length-1&&<i>↓</i>}</Reveal>)}</div></div></section>}
+export function AutopilotSpotlight(){
+  const sectionRef = useRef<HTMLElement>(null);
+  const [activeStep,setActiveStep] = useState(0);
+  const { scrollYProgress } = useScroll({target:sectionRef,offset:["start center","end center"]});
+  useMotionValueEvent(scrollYProgress,"change",value=>setActiveStep(Math.min(steps.length-1,Math.floor(value*steps.length))));
+
+  return <section className="autopilot-spotlight" id="autopilot" ref={sectionRef}><div className="autopilot-sticky"><div className="section-shell spotlight-layout"><Reveal><p className="marketing-eyebrow light">SPOTLIGHT</p><h2>ACTNIVO<br/><span>AUTOPILOT</span></h2><p>Automate the operations you trust.<br/>Keep approval over everything else.</p></Reveal><div className="autopilot-pipeline" style={{"--pipeline-progress":activeStep/(steps.length-1)} as CSSProperties}>{steps.map(([number,title,label],index)=><div className={`pipeline-step ${index<activeStep?"complete":index===activeStep?"processing":"waiting"}`} key={number}><span><i/></span><small>{label}</small><b>{title}</b></div>)}</div></div></div></section>
+}
