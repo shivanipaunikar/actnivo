@@ -22,6 +22,29 @@ test("server-renders the Actnivo marketing homepage", async () => {
   assert.match(html, /Ask your/);
   assert.match(html, /business/);
   assert.match(html, /Built as an execution layer/);
+  const homepageFlow = [
+    "AI COMMERCE OPERATIONS",
+    "WHY ACTNIVO",
+    "THE ACTNIVO WORKFLOW",
+    "OPS INBOX",
+    "FINANCIAL PRIORITY",
+    "ACTNIVO AI",
+    "ACTNIVO ON WHATSAPP",
+    "QUICK COMMERCE",
+    "CONTROL",
+    "ACTION VERIFICATION",
+    "CONNECTED OPERATIONS",
+    "VALUE GENERATED",
+    "INFRASTRUCTURE",
+    "SIMPLE PRICING",
+    "Commerce is complicated.",
+  ];
+  let previousIndex = -1;
+  for (const section of homepageFlow) {
+    const sectionIndex = html.indexOf(section);
+    assert.ok(sectionIndex > previousIndex, `${section} renders in homepage order`);
+    previousIndex = sectionIndex;
+  }
   assert.doesNotMatch(html, /codex-preview/);
 });
 
