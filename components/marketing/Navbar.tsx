@@ -13,6 +13,6 @@ export function Navbar() {
     <nav className={open ? "nav-open" : ""}>
       <a href="#product">Product</a><a href="#autopilot">Autopilot</a><a href="#integrations">Integrations</a><a href="/pricing">Pricing</a><a href="#developers">Developers</a>
     </nav>
-    <div className="nav-actions"><a href="/dashboard">Sign in</a><a className="button button-small" href="#start">Start Free</a></div>
+    <div className="nav-actions"><a href="/dashboard">View Demo</a><a className="button button-small" href="#start">Request Access</a></div>
   </header>;
 }

@@ -63,7 +63,7 @@ export function Hero() {
           transition={{ delay: 0.4, duration: 0.65 }}
         >
           <a className="button" href="#start">
-            Start Free
+            Request Early Access
           </a>
 
           <a className="text-link" href="#product">

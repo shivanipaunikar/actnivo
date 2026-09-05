@@ -22,6 +22,13 @@ test("server-renders the Actnivo marketing homepage", async () => {
   assert.match(html, /PREDICT/);
   assert.match(html, /AUTOMATE/);
   assert.match(html, /Built as infrastructure/);
+  assert.match(html, /View Demo/);
+  assert.match(html, /Request Access/);
+  assert.match(html, /Request Early Access/);
+  assert.match(html, /mailto:hello@actnivo\.com/);
+  assert.doesNotMatch(html, /Sign in/);
+  assert.doesNotMatch(html, /Start Free/);
+  assert.doesNotMatch(html, /Actnivo Technologies Pvt\. Ltd\./);
   assert.doesNotMatch(html, /SIMPLE PRICING/);
   const homepageFlow = [
     "AI COMMERCE OPERATIONS",
