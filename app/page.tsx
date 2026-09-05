@@ -2,7 +2,7 @@ import { MarketingMotionProvider } from "../components/motion/MarketingMotionPro
 import { Navbar } from "../components/marketing/Navbar";
 import { Hero } from "../components/marketing/Hero";
 import { IntegrationMarquee } from "../components/marketing/IntegrationMarquee";
-import { CommerceMetrics } from "../components/marketing/CommerceMetrics";
+import { ProblemStatement } from "../components/marketing/ProblemStatement";
 import { ActionStory } from "../components/marketing/ActionStory";
 import { OpsInboxDemo } from "../components/marketing/OpsInboxDemo";
 import { AICopilotDemo } from "../components/marketing/AICopilotDemo";
@@ -15,5 +15,5 @@ import { FinalCTA } from "../components/marketing/FinalCTA";
 import { Footer } from "../components/marketing/Footer";
 
 export default function MarketingHome() {
-  return <MarketingMotionProvider><main className="marketing-page"><Navbar/><Hero/><IntegrationMarquee/><CommerceMetrics/><ActionStory/><OpsInboxDemo/><AICopilotDemo/><QuickCommerceDemo/><AutopilotDemo/><IntegrationsGraph/><ValueGenerated/><DeveloperSection/><FinalCTA/><Footer/></main></MarketingMotionProvider>;
+  return <MarketingMotionProvider><main className="marketing-page"><Navbar/><Hero/><IntegrationMarquee/><ProblemStatement/><ActionStory/><OpsInboxDemo/><AICopilotDemo/><QuickCommerceDemo/><AutopilotDemo/><IntegrationsGraph/><ValueGenerated/><DeveloperSection/><FinalCTA/><Footer/></main></MarketingMotionProvider>;
 }

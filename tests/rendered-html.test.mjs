@@ -16,6 +16,9 @@ test("server-renders the Actnivo marketing homepage", async () => {
   assert.match(html, /running themselves/);
   assert.match(html, /Actnivo/);
   assert.match(html, /fixes it/);
+  assert.match(html, /Most commerce software tells you/);
+  assert.match(html, /needs to happen next/);
+  assert.match(html, /Detect\. Diagnose/);
   assert.match(html, /Ask your/);
   assert.match(html, /business/);
   assert.match(html, /Built as an execution layer/);
