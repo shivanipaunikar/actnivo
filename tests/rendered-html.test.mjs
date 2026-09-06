@@ -26,6 +26,14 @@ test("server-renders the Actnivo marketing homepage", async () => {
   assert.match(html, /Request Access/);
   assert.match(html, /Request Early Access/);
   assert.match(html, /mailto:hello@actnivo\.com/);
+  assert.match(html, /About us/);
+  assert.match(html, /Careers/);
+  assert.match(html, /Contact us/);
+  assert.match(html, /X \(Twitter\)/);
+  assert.match(html, /Discord/);
+  assert.match(html, /Slack/);
+  assert.match(html, /Cookie preferences/);
+  assert.match(html, /We use cookies to improve your experience/);
   assert.doesNotMatch(html, /Sign in/);
   assert.doesNotMatch(html, /Start Free/);
   assert.doesNotMatch(html, /Actnivo Technologies Pvt\. Ltd\./);
