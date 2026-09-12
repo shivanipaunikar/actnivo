@@ -10,6 +10,7 @@ import { getAllImportRows, getImportJob } from "@/lib/data/imports";
 import { parseImportFile, safeFilename, sha256 } from "@/lib/imports/parser";
 import { matchSku } from "@/lib/imports/matching";
 import { processImportJob } from "@/lib/imports/process";
+import { runOperatingLoop } from "@/lib/operations/engine";
 import { importDefinitions, validateRows } from "@/lib/imports/validation";
 import type { ColumnMapping, RawImportRow } from "@/lib/imports/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -249,7 +250,16 @@ export async function completeImport(formData: FormData) {
     if (job.status !== "completed") {
       await supabase.from("import_jobs").update({ status: "processing" }).eq("organization_id", context.organization.id).eq("id", job.id);
       await processImportJob(supabase, context.organization, job);
+      try {
+        await runOperatingLoop(supabase, context.organization, context.user.id);
+      } catch (scanError) {
+        await supabase.from("import_jobs").update({
+          error_summary: `Data imported. Operations scan needs retry: ${message(scanError)}`,
+        }).eq("organization_id", context.organization.id).eq("id", job.id);
+      }
       revalidatePath("/app/inventory");
+      revalidatePath("/app/ops");
+      revalidatePath("/app/value");
       revalidatePath(path);
     }
     target = `${path}?completed=1`;

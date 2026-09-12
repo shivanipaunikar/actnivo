@@ -23,7 +23,7 @@ const navigation = [
   { group: "INTELLIGENCE" },
   { label: "Analytics", href: "/app/analytics", icon: "⌁" },
   { label: "Profitability", href: "/app/profitability", icon: "₹" },
-  { label: "Value Generated", href: "/app/value-generated", icon: "↑" },
+  { label: "Value Generated", href: "/app/value", icon: "↑" },
   { group: "PLATFORM" },
   { label: "Integrations", href: "/app/integrations", icon: "⇄" },
   { label: "Team", href: "/app/team", icon: "◌" },
@@ -59,7 +59,7 @@ export function AppSidebar({
           {navigation.map((item, index) => "group" in item ? (
             <p key={`${item.group}-${index}`}>{item.group}</p>
           ) : (
-            <Link key={item.href} href={item.href} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) ? "active" : ""} onClick={() => setOpen(false)}>
+            <Link key={item.href} href={item.href} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) || (item.href === "/app/actions" && pathname.startsWith("/app/actions/")) || (item.href === "/app/ops" && pathname.startsWith("/app/ops/")) ? "active" : ""} onClick={() => setOpen(false)}>
               <span>{item.icon}</span>{item.label}
             </Link>
           ))}

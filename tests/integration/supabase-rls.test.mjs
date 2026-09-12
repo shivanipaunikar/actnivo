@@ -126,4 +126,22 @@ if (!configured) {
     assert.ok((await viewerClient.from("inventory_snapshots").insert({ organization_id: ids.orgA, sku_id: ids.skuA, location_id: ids.locationA, available_quantity: 1, snapshot_at: new Date().toISOString() })).error);
     assert.ok((await viewerClient.storage.from("commerce-imports").upload(`${ids.orgA}/tests/${runId}/viewer.csv`, "forbidden", { contentType: "text/csv" })).error);
   });
+
+  test("operating-loop records remain tenant isolated and action transitions are enforced", async () => {
+    const issueId = crypto.randomUUID();
+    const ownIssue = await clientA.from("issues").insert({ id: issueId, organization_id: ids.orgA, type: "STOCKOUT_RISK", severity: "high", status: "open", sku_id: ids.skuA, location_id: ids.locationA, title: "Org A risk", summary: "Tenant A only" }).select("id").single();
+    assert.equal(ownIssue.error, null);
+    assert.equal((await clientA.from("issues").select("id").eq("id", issueId)).data?.length, 1);
+    assert.equal((await clientB.from("issues").select("id").eq("id", issueId)).data?.length, 0);
+    assert.ok((await clientA.from("issues").insert({ organization_id: ids.orgB, type: "STOCKOUT_RISK", severity: "high", sku_id: ids.skuB, location_id: ids.locationB, title: "Forbidden", summary: "Cross tenant" })).error);
+    assert.ok((await viewerClient.from("issues").insert({ organization_id: ids.orgA, type: "STOCKOUT_RISK", severity: "low", sku_id: ids.skuA, title: "Forbidden", summary: "Viewer mutation" })).error);
+
+    const actionId = crypto.randomUUID();
+    const action = await clientA.from("actions").insert({ id: actionId, organization_id: ids.orgA, issue_id: issueId, type: "CREATE_TRANSFER_PLAN", status: "CREATED", requested_by: ids.userA, execution_mode: "ASSISTED", idempotency_key: `${ids.orgA}:${runId}:action` }).select("id").single();
+    assert.equal(action.error, null);
+    assert.ok((await clientA.from("actions").update({ status: "EXECUTED" }).eq("id", actionId)).error, "invalid CREATED → EXECUTED transition must fail");
+    assert.equal((await clientA.from("actions").update({ status: "VALIDATED" }).eq("id", actionId)).error, null);
+    assert.equal((await clientB.from("actions").select("id").eq("id", actionId)).data?.length, 0);
+    assert.ok((await viewerClient.from("actions").insert({ organization_id: ids.orgA, type: "ASSIGN_TASK", requested_by: ids.viewer, idempotency_key: `${ids.orgA}:${runId}:viewer` })).error);
+  });
 }
