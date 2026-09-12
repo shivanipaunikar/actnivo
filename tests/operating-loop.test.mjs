@@ -84,7 +84,7 @@ test("verification fails outside tolerance", () => {
 });
 
 test("migration prevents duplicate active issues and enforces tenant RLS", async () => {
-  const sql = await readFile(new URL("../supabase/migrations/20260912141905_operating_loop.sql", import.meta.url), "utf8");
+  const sql = await readFile(new URL("../supabase/migrations/20260912213038_operating_loop.sql", import.meta.url), "utf8");
   for (const table of ["organization_operating_settings", "forecast_calculations", "issues", "issue_recommendations", "actions", "action_outcomes", "audit_events"]) {
     assert.match(sql, new RegExp(`alter table public\\.${table} enable row level security`, "i"));
     assert.match(sql, new RegExp(`private\\.(?:is_org_member|can_manage_inventory)\\(organization_id\\)`, "i"));
