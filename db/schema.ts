@@ -1,7 +1,13 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
+  boolean,
+  date,
+  foreignKey,
   index,
   integer,
+  jsonb,
+  numeric,
   pgEnum,
   pgTable,
   text,
@@ -32,6 +38,15 @@ export const commerceChannel = pgEnum("commerce_channel", [
   "easyecom",
   "other",
 ]);
+
+export const connectionStatus = pgEnum("connection_status", ["pending", "connected", "disconnected", "error"]);
+export const importSourceType = pgEnum("import_source_type", ["inventory", "sales"]);
+export const importJobStatus = pgEnum("import_job_status", ["uploaded", "mapping_required", "processing", "completed", "failed"]);
+export const locationType = pgEnum("location_type", ["warehouse", "marketplace_fc", "dark_store", "store", "3pl", "other"]);
+export const listingStatus = pgEnum("listing_status", ["active", "inactive", "suppressed"]);
+export const skuMappingStatus = pgEnum("sku_mapping_status", ["mapped", "suggested", "conflict", "unmapped"]);
+export const skuMatchMethod = pgEnum("sku_match_method", ["barcode", "exact_sku", "normalized_sku", "product_similarity", "manual", "new_master", "none"]);
+export const importRowStatus = pgEnum("import_row_status", ["staged", "valid", "invalid", "duplicate", "pending_sku_mapping", "imported"]);
 
 export const organizations = pgTable(
   "organizations",
@@ -120,9 +135,222 @@ export const organizationChannels = pgTable(
   ],
 );
 
+export const connections = pgTable("connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  connectionType: text("connection_type").notNull(),
+  status: connectionStatus("status").notNull().default("pending"),
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true, mode: "date" }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("connections_org_provider_type_key").on(table.organizationId, table.provider, table.connectionType),
+  index("connections_organization_id_idx").on(table.organizationId),
+]);
+
+export const importJobs = pgTable("import_jobs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  sourceType: importSourceType("source_type").notNull(),
+  filename: text("filename").notNull(),
+  storagePath: text("storage_path").notNull(),
+  status: importJobStatus("status").notNull().default("uploaded"),
+  totalRows: integer("total_rows").notNull().default(0),
+  successfulRows: integer("successful_rows").notNull().default(0),
+  failedRows: integer("failed_rows").notNull().default(0),
+  errorSummary: text("error_summary"),
+  columnMapping: jsonb("column_mapping"),
+  createdBy: uuid("created_by").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true, mode: "date" }),
+}, (table) => [
+  uniqueIndex("import_jobs_id_organization_key").on(table.id, table.organizationId),
+  index("import_jobs_organization_created_idx").on(table.organizationId, table.createdAt),
+  index("import_jobs_created_by_idx").on(table.createdBy),
+]);
+
+export const sourceFiles = pgTable("source_files", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  importJobId: uuid("import_job_id").notNull(),
+  storagePath: text("storage_path").notNull(),
+  originalFilename: text("original_filename").notNull(),
+  mimeType: text("mime_type").notNull(),
+  fileSize: bigint("file_size", { mode: "number" }).notNull(),
+  checksum: text("checksum").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ columns: [table.importJobId, table.organizationId], foreignColumns: [importJobs.id, importJobs.organizationId], name: "source_files_import_job_fk" }).onDelete("cascade"),
+  uniqueIndex("source_files_organization_checksum_key").on(table.organizationId, table.checksum),
+  index("source_files_organization_id_idx").on(table.organizationId),
+  index("source_files_import_job_id_idx").on(table.importJobId, table.organizationId),
+]);
+
+export const locations = pgTable("locations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  type: locationType("type").notNull().default("warehouse"),
+  city: text("city"),
+  state: text("state"),
+  country: text("country").notNull().default("India"),
+  externalId: text("external_id"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("locations_id_organization_key").on(table.id, table.organizationId),
+  uniqueIndex("locations_organization_name_type_key").on(table.organizationId, table.name, table.type),
+  index("locations_organization_id_idx").on(table.organizationId),
+]);
+
+export const skus = pgTable("skus", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  masterSku: text("master_sku").notNull(),
+  productName: text("product_name").notNull(),
+  brand: text("brand"),
+  category: text("category"),
+  variant: text("variant"),
+  barcode: text("barcode"),
+  mrp: numeric("mrp", { precision: 14, scale: 2 }).notNull().default("0"),
+  sellingPrice: numeric("selling_price", { precision: 14, scale: 2 }).notNull().default("0"),
+  costPrice: numeric("cost_price", { precision: 14, scale: 2 }),
+  packSize: text("pack_size"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("skus_id_organization_key").on(table.id, table.organizationId),
+  uniqueIndex("skus_organization_master_sku_key").on(table.organizationId, table.masterSku),
+  uniqueIndex("skus_organization_barcode_key").on(table.organizationId, table.barcode).where(sql`${table.barcode} is not null`),
+  index("skus_organization_id_idx").on(table.organizationId),
+  index("skus_organization_product_name_idx").on(table.organizationId, table.productName),
+]);
+
+export const channelListings = pgTable("channel_listings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  skuId: uuid("sku_id").notNull(),
+  channel: commerceChannel("channel").notNull(),
+  externalSku: text("external_sku").notNull(),
+  externalProductId: text("external_product_id"),
+  listingName: text("listing_name"),
+  status: listingStatus("status").notNull().default("active"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ columns: [table.skuId, table.organizationId], foreignColumns: [skus.id, skus.organizationId], name: "channel_listings_sku_fk" }).onDelete("cascade"),
+  uniqueIndex("channel_listings_organization_channel_sku_key").on(table.organizationId, table.channel, table.externalSku),
+  index("channel_listings_organization_id_idx").on(table.organizationId),
+  index("channel_listings_sku_id_idx").on(table.skuId, table.organizationId),
+]);
+
+export const skuMappings = pgTable("sku_mappings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  sourceType: importSourceType("source_type").notNull(),
+  sourceSku: text("source_sku").notNull(),
+  sourceBarcode: text("source_barcode"),
+  sourceProductName: text("source_product_name"),
+  sourceVariant: text("source_variant"),
+  sourcePackSize: text("source_pack_size"),
+  masterSkuId: uuid("master_sku_id"),
+  status: skuMappingStatus("status").notNull().default("unmapped"),
+  matchMethod: skuMatchMethod("match_method").notNull().default("none"),
+  confidence: numeric("confidence", { precision: 5, scale: 4 }),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ columns: [table.masterSkuId, table.organizationId], foreignColumns: [skus.id, skus.organizationId], name: "sku_mappings_master_sku_fk" }),
+  uniqueIndex("sku_mappings_id_organization_key").on(table.id, table.organizationId),
+  uniqueIndex("sku_mappings_organization_source_key").on(table.organizationId, table.sourceType, table.sourceSku),
+  index("sku_mappings_organization_status_idx").on(table.organizationId, table.status),
+  index("sku_mappings_master_sku_id_idx").on(table.masterSkuId, table.organizationId),
+]);
+
+export const importRows = pgTable("import_rows", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  importJobId: uuid("import_job_id").notNull(),
+  rowNumber: integer("row_number").notNull(),
+  rawData: jsonb("raw_data").notNull(),
+  normalizedData: jsonb("normalized_data"),
+  validationErrors: text("validation_errors").array().notNull().default(sql`'{}'::text[]`),
+  rowHash: text("row_hash").notNull(),
+  status: importRowStatus("status").notNull().default("staged"),
+  skuMappingId: uuid("sku_mapping_id"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ columns: [table.importJobId, table.organizationId], foreignColumns: [importJobs.id, importJobs.organizationId], name: "import_rows_import_job_fk" }).onDelete("cascade"),
+  foreignKey({ columns: [table.skuMappingId, table.organizationId], foreignColumns: [skuMappings.id, skuMappings.organizationId], name: "import_rows_sku_mapping_fk" }),
+  uniqueIndex("import_rows_id_organization_key").on(table.id, table.organizationId),
+  uniqueIndex("import_rows_import_row_key").on(table.importJobId, table.rowNumber),
+  index("import_rows_organization_id_idx").on(table.organizationId),
+  index("import_rows_import_job_status_idx").on(table.importJobId, table.organizationId, table.status),
+  index("import_rows_sku_mapping_id_idx").on(table.skuMappingId, table.organizationId),
+]);
+
+export const inventorySnapshots = pgTable("inventory_snapshots", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  skuId: uuid("sku_id").notNull(),
+  locationId: uuid("location_id").notNull(),
+  channel: commerceChannel("channel"),
+  availableQuantity: integer("available_quantity").notNull(),
+  reservedQuantity: integer("reserved_quantity").notNull().default(0),
+  inboundQuantity: integer("inbound_quantity").notNull().default(0),
+  snapshotAt: timestamp("snapshot_at", { withTimezone: true, mode: "date" }).notNull(),
+  sourceImportId: uuid("source_import_id"),
+  sourceRowId: uuid("source_row_id"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ columns: [table.skuId, table.organizationId], foreignColumns: [skus.id, skus.organizationId], name: "inventory_snapshots_sku_fk" }),
+  foreignKey({ columns: [table.locationId, table.organizationId], foreignColumns: [locations.id, locations.organizationId], name: "inventory_snapshots_location_fk" }),
+  foreignKey({ columns: [table.sourceImportId, table.organizationId], foreignColumns: [importJobs.id, importJobs.organizationId], name: "inventory_snapshots_import_fk" }),
+  foreignKey({ columns: [table.sourceRowId, table.organizationId], foreignColumns: [importRows.id, importRows.organizationId], name: "inventory_snapshots_source_row_fk" }),
+  index("inventory_snapshots_organization_snapshot_idx").on(table.organizationId, table.snapshotAt),
+  index("inventory_snapshots_sku_snapshot_idx").on(table.skuId, table.organizationId, table.snapshotAt),
+  index("inventory_snapshots_location_id_idx").on(table.locationId, table.organizationId),
+  index("inventory_snapshots_source_import_id_idx").on(table.sourceImportId, table.organizationId),
+  index("inventory_snapshots_source_row_org_idx").on(table.sourceRowId, table.organizationId),
+  uniqueIndex("inventory_snapshots_source_row_key").on(table.sourceRowId).where(sql`${table.sourceRowId} is not null`),
+]);
+
+export const salesDaily = pgTable("sales_daily", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  skuId: uuid("sku_id").notNull(),
+  locationId: uuid("location_id"),
+  channel: commerceChannel("channel").notNull(),
+  date: date("date").notNull(),
+  unitsSold: integer("units_sold").notNull(),
+  grossSales: numeric("gross_sales", { precision: 14, scale: 2 }).notNull(),
+  netSales: numeric("net_sales", { precision: 14, scale: 2 }),
+  sourceImportId: uuid("source_import_id"),
+  sourceRowId: uuid("source_row_id"),
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
+}, (table) => [
+  foreignKey({ columns: [table.skuId, table.organizationId], foreignColumns: [skus.id, skus.organizationId], name: "sales_daily_sku_fk" }),
+  foreignKey({ columns: [table.locationId, table.organizationId], foreignColumns: [locations.id, locations.organizationId], name: "sales_daily_location_fk" }),
+  foreignKey({ columns: [table.sourceImportId, table.organizationId], foreignColumns: [importJobs.id, importJobs.organizationId], name: "sales_daily_import_fk" }),
+  foreignKey({ columns: [table.sourceRowId, table.organizationId], foreignColumns: [importRows.id, importRows.organizationId], name: "sales_daily_source_row_fk" }),
+  index("sales_daily_organization_date_idx").on(table.organizationId, table.date),
+  index("sales_daily_sku_date_idx").on(table.skuId, table.organizationId, table.date),
+  index("sales_daily_location_id_idx").on(table.locationId, table.organizationId),
+  index("sales_daily_source_import_id_idx").on(table.sourceImportId, table.organizationId),
+  index("sales_daily_source_row_org_idx").on(table.sourceRowId, table.organizationId),
+  uniqueIndex("sales_daily_source_row_key").on(table.sourceRowId).where(sql`${table.sourceRowId} is not null`),
+]);
+
 export const organizationsRelations = relations(organizations, ({ many }) => ({
   members: many(organizationMembers),
   channels: many(organizationChannels),
+  connections: many(connections),
+  importJobs: many(importJobs),
+  locations: many(locations),
+  skus: many(skus),
 }));
 
 export const organizationMembersRelations = relations(
@@ -150,3 +378,13 @@ export type NewOrganization = typeof organizations.$inferInsert;
 export type Profile = typeof profiles.$inferSelect;
 export type OrganizationMember = typeof organizationMembers.$inferSelect;
 export type OrganizationChannel = typeof organizationChannels.$inferSelect;
+export type Connection = typeof connections.$inferSelect;
+export type ImportJob = typeof importJobs.$inferSelect;
+export type SourceFile = typeof sourceFiles.$inferSelect;
+export type Location = typeof locations.$inferSelect;
+export type Sku = typeof skus.$inferSelect;
+export type ChannelListing = typeof channelListings.$inferSelect;
+export type SkuMapping = typeof skuMappings.$inferSelect;
+export type ImportRow = typeof importRows.$inferSelect;
+export type InventorySnapshot = typeof inventorySnapshots.$inferSelect;
+export type SalesDaily = typeof salesDaily.$inferSelect;

@@ -11,6 +11,7 @@ const navigation = [
   { group: "OPERATIONS" },
   { label: "Ops Inbox", href: "/app/ops", icon: "◎" },
   { label: "Inventory", href: "/app/inventory", icon: "◇" },
+  { label: "SKU Mapping", href: "/app/inventory/sku-mapping", icon: "↔" },
   { label: "Orders", href: "/app/orders", icon: "▦" },
   { label: "Purchase Orders", href: "/app/purchase-orders", icon: "▱" },
   { label: "Quick Commerce", href: "/app/quick-commerce", icon: "◫" },
@@ -58,7 +59,7 @@ export function AppSidebar({
           {navigation.map((item, index) => "group" in item ? (
             <p key={`${item.group}-${index}`}>{item.group}</p>
           ) : (
-            <Link key={item.href} href={item.href} className={pathname === item.href ? "active" : ""} onClick={() => setOpen(false)}>
+            <Link key={item.href} href={item.href} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) ? "active" : ""} onClick={() => setOpen(false)}>
               <span>{item.icon}</span>{item.label}
             </Link>
           ))}

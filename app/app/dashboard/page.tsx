@@ -19,7 +19,7 @@ export default async function AppDashboardPage() {
         <div className="saas-welcome"><div><p>COMMAND CENTER</p><h1>Welcome, {firstName}.</h1><span>{organization.name} · {organization.country}</span></div><time>{new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date())}</time></div>
         <section className="saas-empty-hero">
           <span>01</span>
-          <div><small>CONNECT YOUR OPERATIONS</small><h2>No data connected yet.</h2><p>Import a source or connect an integration to start building your unified commerce operations view.</p><div><Link className="saas-primary" href="/app/integrations">Import your first data source</Link><Link href="/app/integrations">Connect integration →</Link></div></div>
+          <div><small>CONNECT YOUR OPERATIONS</small><h2>No data connected yet.</h2><p>Import a source or connect an integration to start building your unified commerce operations view.</p><div><Link className="saas-primary" href="/app/integrations/import">Import your first data source</Link><Link href="/app/integrations">Connect integration →</Link></div></div>
           <aside><i /><i /><i /><strong>Waiting for your first source</strong></aside>
         </section>
         <div className="saas-metrics" aria-label="Commerce metrics awaiting data">

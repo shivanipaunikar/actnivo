@@ -25,7 +25,7 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
 
 Do not add a service-role or secret key to a `NEXT_PUBLIC_` variable. This application does not require a service-role credential.
 
-Apply the SQL files in `supabase/migrations` to the project. The initial migration creates organization, profile, membership, onboarding-channel, RLS, and private organization-asset storage policies.
+Apply the SQL files in `supabase/migrations` in filename order. The migrations create organization membership, the commerce/import model, RLS, and private organization-scoped storage. Raw files use paths shaped like `<organization-id>/imports/<job-id>/<filename>` inside the private `commerce-imports` bucket.
 
 In Supabase Auth settings:
 
@@ -40,9 +40,18 @@ In Supabase Auth settings:
 - `/auth/callback`: PKCE code exchange.
 - `/onboarding/company` and `/onboarding/channels`: organization creation and channel selection.
 - `/app/*`: server-protected tenant workspace.
+- `/app/integrations/import`: CSV/XLSX inventory and sales import wizard.
+- `/app/inventory/sku-mapping`: deterministic SKU review and bulk mapping.
+- `/app/inventory`: current normalized inventory with filters and SKU detail pages.
 - `/logout`: clears the Supabase session.
 
-Authorization comes from `organization_members`, never user-editable Auth metadata. Every exposed business table has RLS and explicit grants.
+Authorization comes from `organization_members`, never user-editable Auth metadata. Every exposed business table has RLS and explicit grants. Inventory snapshots are append-only: authenticated clients receive only `select` and `insert`, and import retries skip existing source rows.
+
+## Import limits and required columns
+
+Uploads accept CSV and XLSX files up to 10 MB and 25,000 data rows. Inventory requires SKU, location, available quantity, and snapshot date. Sales requires SKU, channel, date, units sold, and gross sales. Optional fields can be mapped during preview.
+
+SKU matching is deterministic: exact barcode, exact SKU, normalized SKU, then product/variant/pack-size similarity. Similarity matches require human approval before import; no LLM is used.
 
 ## Validation
 
@@ -52,4 +61,4 @@ npm run typecheck
 npm test
 ```
 
-Inventory intelligence, channel connectors, automated actions, and AI are intentionally outside this foundation phase.
+Advanced inventory recommendations, live marketplace connectors, automated actions, and AI are intentionally outside this sprint.
