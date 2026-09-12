@@ -50,6 +50,8 @@ async function getMappings(supabase: SupabaseClient<Database>, organizationId: s
 export async function uploadImport(formData: FormData) {
   const context = await requireAppContext();
   let target = "/app/integrations/import";
+  let jobId: string | null = null;
+  let supabase: SupabaseClient<Database> | null = null;
   try {
     assertCanManageInventory(context.role);
     const sourceType = String(formData.get("source_type") ?? "");
@@ -59,12 +61,12 @@ export async function uploadImport(formData: FormData) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const parsed = await parseImportFile(file.name, bytes);
     const checksum = sha256(bytes);
-    const supabase = await createClient();
+    supabase = await createClient();
     const { data: duplicate } = await supabase.from("source_files").select("import_job_id")
       .eq("organization_id", context.organization.id).eq("checksum", checksum).maybeSingle();
     if (duplicate) throw new Error("This exact file has already been uploaded.");
 
-    const jobId = crypto.randomUUID();
+    jobId = crypto.randomUUID();
     const storagePath = `${context.organization.id}/imports/${jobId}/${safeFilename(file.name)}`;
     const mimeType = file.name.toLowerCase().endsWith(".csv")
       ? "text/csv"
@@ -105,7 +107,7 @@ export async function uploadImport(formData: FormData) {
     for (let index = 0; index < parsed.rows.length; index += BATCH_SIZE) {
       const batch = parsed.rows.slice(index, index + BATCH_SIZE).map((raw, offset) => ({
         organization_id: context.organization.id,
-        import_job_id: jobId,
+        import_job_id: jobId!,
         row_number: index + offset + 2,
         raw_data: raw as Json,
         row_hash: sha256(JSON.stringify(raw)),
@@ -121,6 +123,13 @@ export async function uploadImport(formData: FormData) {
     if (updateError) throw new Error(updateError.message);
     target = `/app/integrations/import/${jobId}`;
   } catch (error) {
+    if (supabase && jobId) {
+      await supabase.from("import_jobs").update({
+        status: "failed",
+        error_summary: message(error),
+        completed_at: new Date().toISOString(),
+      }).eq("organization_id", context.organization.id).eq("id", jobId);
+    }
     target = errorPath("/app/integrations/import", error);
   }
   redirect(target);
@@ -245,6 +254,14 @@ export async function completeImport(formData: FormData) {
     }
     target = `${path}?completed=1`;
   } catch (error) {
+    if (jobId) {
+      const failureClient = await createClient();
+      await failureClient.from("import_jobs").update({
+        status: "failed",
+        error_summary: message(error),
+        completed_at: new Date().toISOString(),
+      }).eq("organization_id", context.organization.id).eq("id", jobId);
+    }
     target = errorPath(path, error);
   }
   redirect(target);

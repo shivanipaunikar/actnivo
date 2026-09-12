@@ -10,6 +10,11 @@ import type {
 } from "@/lib/supabase/database.types";
 import { getAllImportRows } from "@/lib/data/imports";
 import type { NormalizedInventoryRow, NormalizedSalesRow } from "./types";
+import {
+  buildInventorySnapshotRecords,
+  buildSalesDailyRecords,
+  filterNewSourceRows,
+} from "./operational";
 
 const BATCH_SIZE = 400;
 
@@ -124,22 +129,11 @@ export async function processImportJob(
 
   const insertedRowIds: string[] = [];
   if (job.source_type === "inventory") {
-    const records = ready.map((row) => {
-      const data = normalizedData(row) as NormalizedInventoryRow;
-      const mapping = mappingById.get(row.sku_mapping_id!)!;
-      return {
-        organization_id: organization.id,
-        sku_id: mapping.master_sku_id!,
-        location_id: locations.get(data.location)!.id,
-        channel: data.channel,
-        available_quantity: data.available_quantity,
-        reserved_quantity: data.reserved_quantity,
-        inbound_quantity: data.inbound_quantity,
-        snapshot_at: data.snapshot_date,
-        source_import_id: job.id,
-        source_row_id: row.id,
-      };
-    });
+    const records = buildInventorySnapshotRecords(organization.id, job.id, ready.map((row) => ({
+      sourceRowId: row.id,
+      skuId: mappingById.get(row.sku_mapping_id!)!.master_sku_id!,
+      normalized: normalizedData(row) as NormalizedInventoryRow,
+    })), new Map([...locations].map(([name, location]) => [name, location.id])));
     for (const batch of chunks(records)) {
       const sourceRowIds = batch.map((record) => record.source_row_id);
       const { data: existing, error: existingError } = await supabase.from("inventory_snapshots")
@@ -147,32 +141,32 @@ export async function processImportJob(
         .eq("organization_id", organization.id)
         .in("source_row_id", sourceRowIds);
       if (existingError) throw new Error(existingError.message);
-      const existingIds = new Set((existing ?? []).map((item) => item.source_row_id).filter(Boolean));
-      const newRecords = batch.filter((record) => !existingIds.has(record.source_row_id));
+      const existingSourceRowIds = (existing ?? []).map((item) => item.source_row_id).filter((id): id is string => Boolean(id));
+      insertedRowIds.push(...existingSourceRowIds);
+      const newRecords = filterNewSourceRows(batch, existingSourceRowIds);
       if (!newRecords.length) continue;
       const { data, error } = await supabase.from("inventory_snapshots").insert(newRecords).select("source_row_id");
       if (error) throw new Error(error.message);
       insertedRowIds.push(...(data ?? []).map((item) => item.source_row_id!).filter(Boolean));
     }
   } else {
-    const records = ready.map((row) => {
-      const data = normalizedData(row) as NormalizedSalesRow;
-      const mapping = mappingById.get(row.sku_mapping_id!)!;
-      return {
-        organization_id: organization.id,
-        sku_id: mapping.master_sku_id!,
-        location_id: data.location ? locations.get(data.location)!.id : null,
-        channel: data.channel,
-        date: data.date,
-        units_sold: data.units_sold,
-        gross_sales: String(data.gross_sales),
-        net_sales: data.net_sales === null ? null : String(data.net_sales),
-        source_import_id: job.id,
-        source_row_id: row.id,
-      };
-    });
+    const records = buildSalesDailyRecords(organization.id, job.id, ready.map((row) => ({
+      sourceRowId: row.id,
+      skuId: mappingById.get(row.sku_mapping_id!)!.master_sku_id!,
+      normalized: normalizedData(row) as NormalizedSalesRow,
+    })), new Map([...locations].map(([name, location]) => [name, location.id])));
     for (const batch of chunks(records)) {
-      const { data, error } = await supabase.from("sales_daily").upsert(batch, {
+      const sourceRowIds = batch.map((record) => record.source_row_id);
+      const { data: existing, error: existingError } = await supabase.from("sales_daily")
+        .select("source_row_id")
+        .eq("organization_id", organization.id)
+        .in("source_row_id", sourceRowIds);
+      if (existingError) throw new Error(existingError.message);
+      const existingSourceRowIds = (existing ?? []).map((item) => item.source_row_id).filter((id): id is string => Boolean(id));
+      insertedRowIds.push(...existingSourceRowIds);
+      const newRecords = filterNewSourceRows(batch, existingSourceRowIds);
+      if (!newRecords.length) continue;
+      const { data, error } = await supabase.from("sales_daily").upsert(newRecords, {
         onConflict: "organization_id,sku_id,location_id,channel,date",
         ignoreDuplicates: true,
       }).select("source_row_id");
@@ -187,15 +181,6 @@ export async function processImportJob(
   await updateRowStatuses(supabase, organization.id, duplicateIds, "duplicate");
   const existingFailures = rows.filter((row) => row.status === "invalid" || row.status === "duplicate").length;
   const failedRows = existingFailures + duplicateIds.length;
-  const { error: jobError } = await supabase.from("import_jobs").update({
-    status: "completed",
-    successful_rows: insertedRowIds.length,
-    failed_rows: failedRows,
-    error_summary: failedRows ? `${failedRows} row${failedRows === 1 ? " was" : "s were"} skipped during validation or duplicate checks.` : null,
-    completed_at: new Date().toISOString(),
-  }).eq("organization_id", organization.id).eq("id", job.id);
-  if (jobError) throw new Error(jobError.message);
-
   const { error: connectionError } = await supabase.from("connections").upsert({
     organization_id: organization.id,
     provider: "file_upload",
@@ -204,6 +189,15 @@ export async function processImportJob(
     last_synced_at: new Date().toISOString(),
   }, { onConflict: "organization_id,provider,connection_type" });
   if (connectionError) throw new Error(connectionError.message);
+
+  const { error: jobError } = await supabase.from("import_jobs").update({
+    status: "completed",
+    successful_rows: insertedRowIds.length,
+    failed_rows: failedRows,
+    error_summary: failedRows ? `${failedRows} row${failedRows === 1 ? " was" : "s were"} skipped during validation or duplicate checks.` : null,
+    completed_at: new Date().toISOString(),
+  }).eq("organization_id", organization.id).eq("id", job.id);
+  if (jobError) throw new Error(jobError.message);
   return { imported: insertedRowIds.length, failed: failedRows };
 }
 

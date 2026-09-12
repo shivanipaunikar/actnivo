@@ -61,4 +61,18 @@ npm run typecheck
 npm test
 ```
 
+### Isolated Supabase integration tests
+
+The two-user database and Storage RLS suite is intentionally separate because it creates and deletes test users and organizations. Run it only against a disposable local or hosted test project with all migrations applied:
+
+```bash
+SUPABASE_TEST_URL=https://your-test-project.supabase.co \
+SUPABASE_TEST_PUBLISHABLE_KEY=sb_publishable_test_key \
+SUPABASE_TEST_SERVICE_ROLE_KEY=your_test_admin_key \
+SUPABASE_TEST_ISOLATED=true \
+npm run test:integration
+```
+
+The admin key is used only for fixture setup and cleanup. Every authorization assertion uses a password-authenticated publishable-key client representing User A, User B, or a viewer. Never use the production project for this suite and never expose the test admin key through a `NEXT_PUBLIC_` variable.
+
 Advanced inventory recommendations, live marketplace connectors, automated actions, and AI are intentionally outside this sprint.

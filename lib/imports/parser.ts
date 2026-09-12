@@ -48,16 +48,26 @@ export async function parseImportFile(filename: string, bytes: Uint8Array): Prom
   if (bytes.byteLength > MAX_IMPORT_BYTES) throw new Error("Files must be 10 MB or smaller.");
   const extension = filename.toLowerCase().split(".").pop();
   if (extension === "csv") {
-    const rows = parse(Buffer.from(bytes).toString("utf8"), {
-      bom: true,
-      skip_empty_lines: true,
-      relax_column_count: true,
-      trim: true,
-    }) as unknown[][];
+    let rows: unknown[][];
+    try {
+      rows = parse(Buffer.from(bytes).toString("utf8"), {
+        bom: true,
+        skip_empty_lines: true,
+        relax_column_count: true,
+        trim: true,
+      }) as unknown[][];
+    } catch {
+      throw new Error("We could not read this CSV file. Check its quotes, delimiters, and header row.");
+    }
     return rowsToRecords(rows);
   }
   if (extension === "xlsx") {
-    const rows = await readSheet(Buffer.from(bytes));
+    let rows: unknown[][];
+    try {
+      rows = await readSheet(Buffer.from(bytes));
+    } catch {
+      throw new Error("We could not read this XLSX file. Check that it is a valid, unencrypted Excel workbook.");
+    }
     return rowsToRecords(rows);
   }
   throw new Error("Upload a CSV or XLSX file.");
