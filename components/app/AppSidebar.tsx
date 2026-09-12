@@ -59,8 +59,8 @@ export function AppSidebar({
           {navigation.map((item, index) => "group" in item ? (
             <p key={`${item.group}-${index}`}>{item.group}</p>
           ) : (
-            <Link key={item.href} href={item.href} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) || (item.href === "/app/actions" && pathname.startsWith("/app/actions/")) || (item.href === "/app/ops" && pathname.startsWith("/app/ops/")) ? "active" : ""} onClick={() => setOpen(false)}>
-              <span>{item.icon}</span>{item.label}
+            <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) || (item.href === "/app/actions" && pathname.startsWith("/app/actions/")) || (item.href === "/app/ops" && pathname.startsWith("/app/ops/")) ? "active" : ""} onClick={() => setOpen(false)}>
+              <span aria-hidden="true">{item.icon}</span><strong>{item.label}</strong>
             </Link>
           ))}
         </nav>
