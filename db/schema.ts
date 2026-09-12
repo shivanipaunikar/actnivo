@@ -362,7 +362,7 @@ export const organizationOperatingSettings = pgTable("organization_operating_set
   updatedBy: uuid("updated_by"),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
-});
+}, (table) => [index("organization_operating_settings_updated_by_idx").on(table.updatedBy)]);
 
 export const forecastCalculations = pgTable("forecast_calculations", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -393,6 +393,8 @@ export const forecastCalculations = pgTable("forecast_calculations", {
   foreignKey({ columns: [table.locationId, table.organizationId], foreignColumns: [locations.id, locations.organizationId], name: "forecast_calculations_location_fk" }).onDelete("cascade"),
   uniqueIndex("forecast_calculations_id_organization_key").on(table.id, table.organizationId),
   index("forecast_calculations_scope_idx").on(table.organizationId, table.skuId, table.locationId, table.channel, table.calculatedAt),
+  index("forecast_calculations_sku_org_idx").on(table.skuId, table.organizationId),
+  index("forecast_calculations_location_org_idx").on(table.locationId, table.organizationId),
 ]);
 
 export const issues = pgTable("issues", {
@@ -409,6 +411,7 @@ export const issues = pgTable("issues", {
   foreignKey({ columns: [table.locationId, table.organizationId], foreignColumns: [locations.id, locations.organizationId], name: "issues_location_fk" }),
   foreignKey({ columns: [table.forecastCalculationId, table.organizationId], foreignColumns: [forecastCalculations.id, forecastCalculations.organizationId], name: "issues_forecast_fk" }),
   uniqueIndex("issues_id_organization_key").on(table.id, table.organizationId), index("issues_priority_idx").on(table.organizationId, table.status, table.estimatedRevenueAtRisk),
+  index("issues_forecast_org_idx").on(table.forecastCalculationId, table.organizationId), index("issues_assigned_to_idx").on(table.assignedTo),
 ]);
 
 export const issueRecommendations = pgTable("issue_recommendations", {
@@ -422,6 +425,7 @@ export const issueRecommendations = pgTable("issue_recommendations", {
   foreignKey({ columns: [table.sourceLocationId, table.organizationId], foreignColumns: [locations.id, locations.organizationId], name: "issue_recommendations_source_location_fk" }),
   foreignKey({ columns: [table.destinationLocationId, table.organizationId], foreignColumns: [locations.id, locations.organizationId], name: "issue_recommendations_destination_location_fk" }),
   uniqueIndex("issue_recommendations_id_organization_key").on(table.id, table.organizationId), uniqueIndex("issue_recommendations_issue_key").on(table.issueId),
+  index("issue_recommendations_issue_org_idx").on(table.issueId, table.organizationId), index("issue_recommendations_source_location_org_idx").on(table.sourceLocationId, table.organizationId), index("issue_recommendations_destination_location_org_idx").on(table.destinationLocationId, table.organizationId),
 ]);
 
 export const actions = pgTable("actions", {
@@ -430,14 +434,14 @@ export const actions = pgTable("actions", {
   executionMode: executionMode("execution_mode").notNull().default("ASSISTED"), payload: jsonb("payload").notNull().default(sql`'{}'::jsonb`), idempotencyKey: text("idempotency_key").notNull(),
   externalReference: text("external_reference"), createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(), approvedAt: timestamp("approved_at", { withTimezone: true, mode: "date" }),
   executedAt: timestamp("executed_at", { withTimezone: true, mode: "date" }), updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
-}, (table) => [foreignKey({ columns: [table.issueId, table.organizationId], foreignColumns: [issues.id, issues.organizationId], name: "actions_issue_fk" }), uniqueIndex("actions_id_organization_key").on(table.id, table.organizationId), uniqueIndex("actions_idempotency_key").on(table.idempotencyKey), index("actions_status_idx").on(table.organizationId, table.status, table.createdAt)]);
+}, (table) => [foreignKey({ columns: [table.issueId, table.organizationId], foreignColumns: [issues.id, issues.organizationId], name: "actions_issue_fk" }), uniqueIndex("actions_id_organization_key").on(table.id, table.organizationId), uniqueIndex("actions_idempotency_key").on(table.idempotencyKey), index("actions_status_idx").on(table.organizationId, table.status, table.createdAt), index("actions_requested_by_idx").on(table.requestedBy), index("actions_approved_by_idx").on(table.approvedBy)]);
 
 export const actionOutcomes = pgTable("action_outcomes", {
   id: uuid("id").defaultRandom().primaryKey(), organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }), actionId: uuid("action_id").notNull(),
   beforeState: jsonb("before_state").notNull(), expectedState: jsonb("expected_state").notNull(), actualState: jsonb("actual_state"), estimatedValueProtected: numeric("estimated_value_protected", { precision: 16, scale: 2 }).notNull().default("0"),
   actualValueProtected: numeric("actual_value_protected", { precision: 16, scale: 2 }), success: boolean("success"), verificationStatus: verificationStatus("verification_status").notNull().default("PENDING"),
   verifiedAt: timestamp("verified_at", { withTimezone: true, mode: "date" }), createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(), updatedAt: timestamp("updated_at", { withTimezone: true, mode: "date" }).notNull().defaultNow(),
-}, (table) => [foreignKey({ columns: [table.actionId, table.organizationId], foreignColumns: [actions.id, actions.organizationId], name: "action_outcomes_action_fk" }).onDelete("cascade"), uniqueIndex("action_outcomes_id_organization_key").on(table.id, table.organizationId), uniqueIndex("action_outcomes_action_key").on(table.actionId)]);
+}, (table) => [foreignKey({ columns: [table.actionId, table.organizationId], foreignColumns: [actions.id, actions.organizationId], name: "action_outcomes_action_fk" }).onDelete("cascade"), uniqueIndex("action_outcomes_id_organization_key").on(table.id, table.organizationId), uniqueIndex("action_outcomes_action_key").on(table.actionId), index("action_outcomes_action_org_idx").on(table.actionId, table.organizationId)]);
 
 export const auditEvents = pgTable("audit_events", {
   id: uuid("id").defaultRandom().primaryKey(), organizationId: uuid("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }), actorId: uuid("actor_id"), entityType: text("entity_type").notNull(), entityId: uuid("entity_id").notNull(), eventType: text("event_type").notNull(),
