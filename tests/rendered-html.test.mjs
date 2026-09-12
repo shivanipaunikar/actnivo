@@ -78,11 +78,17 @@ test("uses the unified Actnivo technical palette", async () => {
   assert.doesNotMatch(css, /#(?:C49A68|D2B48A|855F38|FBF7F1|111a4a|0d153c|152756|182453|59c59d|4fc49a)/i);
 });
 
-test("keeps the operations dashboard available", async () => {
+test("legacy dashboard redirects into the protected application", async () => {
   const response = await render("/dashboard");
-  assert.equal(response.status, 200);
-  const html = await response.text();
-  assert.match(html, /Good morning, Shivani/);
-  assert.match(html, /Revenue at risk/i);
-  assert.match(html, /Channel performance/);
+  assert.ok([302, 303, 307, 308].includes(response.status));
+  assert.match(response.headers.get("location") ?? "", /\/app\/dashboard/);
+});
+
+test("renders customer authentication routes", async () => {
+  const login = await render("/login");
+  assert.equal(login.status, 200);
+  const html = await login.text();
+  assert.match(html, /Welcome back/);
+  assert.match(html, /Email me a magic link/);
+  assert.match(html, /Create an account/);
 });
