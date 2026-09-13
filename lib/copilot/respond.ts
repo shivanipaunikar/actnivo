@@ -42,12 +42,12 @@ export function deterministicReply(question: string, context: CopilotContext): C
   }
   if (q.includes("po") || q.includes("purchase order") || q.includes("arrive") || q.includes("supplier")) {
     if (!context.purchaseOrderRisks.length) return { answer: "I do not see any purchase-order arrival risks in the connected data right now.", sources: [{ label: "Purchase Orders", href: "/app/purchase-orders" }], proposals: [], mode: "deterministic" };
-    const lines = context.purchaseOrderRisks.slice(0, 5).map((risk, index) => `${index + 1}. ${risk.poNumber} · ${risk.sku}: arrives ${risk.gapDays} days after projected stockout, with ${money.format(risk.revenueAtRisk)} at risk.`);
+    const lines = context.purchaseOrderRisks.slice(0, 5).map((risk, index) => `${index + 1}. ${risk.poNumber} · ${risk.sku}: arrives ${risk.gapDays} day${risk.gapDays === 1 ? "" : "s"} after projected stockout, with ${money.format(risk.revenueAtRisk)} at risk. Recommended: ${risk.recommendationType === "EXPEDITE_PO" ? "expedite the PO" : "safe transfer first"}.`);
     return { answer: `These incoming POs need attention:\n\n${lines.join("\n")}`, sources: uniqueSources(context.purchaseOrderRisks.map((risk) => ({ label: risk.poNumber, href: risk.href }))), proposals, mode: "deterministic" };
   }
   if (q.includes("blinkit") || q.includes("zepto") || q.includes("instamart") || q.includes("quick commerce")) {
     const channels = context.quickCommerce.channelHealth.map((channel) => `${channel.channel.replaceAll("_", " ")}: ${channel.health}${channel.connected ? ` · ${money.format(channel.revenueAtRisk)} at risk` : " · not connected"}`);
-    return { answer: `Quick-commerce health:\n\n${channels.join("\n")}\n\nAvailability data is only included when connected.`, sources: [{ label: "Quick Commerce", href: "/app/quick-commerce" }], proposals, mode: "deterministic" };
+    return { answer: `Quick-commerce health:\n\n${channels.join("\n")}\n\nAvailability data is only included when connected; I will not infer unavailable marketplace availability.`, sources: [{ label: "Quick Commerce", href: "/app/quick-commerce" }], proposals, mode: "deterministic" };
   }
   if (q.includes("action") || q.includes("approval") || q.includes("approve")) {
     if (!context.pendingActions.length) return { answer: "There are no active actions waiting in the action lifecycle right now.", sources: [{ label: "Actions", href: "/app/actions" }], proposals, mode: "deterministic" };
