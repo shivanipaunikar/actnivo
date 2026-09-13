@@ -6,6 +6,7 @@ import { getIssueDetail } from "@/lib/data/operations";
 import { titleCaseChannel } from "@/lib/data/inventory";
 import { createClient } from "@/lib/supabase/server";
 import { approveExpeditePurchaseOrder } from "../../../purchase-orders/actions";
+import { prepareOrderRecoveryTask } from "../../../orders/actions";
 import { approveIssue, ignoreIssue, modifyRecommendation } from "../../actions";
 
 const currency = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
@@ -15,16 +16,40 @@ export default async function IssueDetailPage({ params, searchParams }: { params
   const supabase = await createClient();
   const data = await getIssueDetail(supabase, context.organization.id, id);
   if (!data) notFound();
-  const { issue, sku, location, forecast, recommendation, sourceLocation, actions } = data;
+  const { issue, sku, location, forecast, recommendation, sourceLocation, actions, order } = data;
   const manageable = canManageInventory(context.role);
   const latestAction = actions[0];
   const metadata = issue.metadata as Record<string, unknown>;
   const isPoIssue = String(issue.type).startsWith("PO_");
+  const isOrderIssue = ["ORDER_DELAYED", "ORDER_STUCK", "RTO_RISK"].includes(String(issue.type));
   const recommendationType = String(metadata.recommendation_type ?? "");
   const poNumber = String(metadata.po_number ?? "Purchase order");
 
+  if (isOrderIssue) {
+    const orderNumber = String(metadata.external_order_id ?? order?.external_order_id ?? "Order");
+    return <div className="product-page issue-detail-page">
+      <header className="product-page-header"><div><p>OPS INBOX / {String(issue.type).replaceAll("_", " ")}</p><h1>{orderNumber}</h1><span>{issue.channel ? titleCaseChannel(issue.channel) : "Direct"} · {location?.name ?? "All locations"}</span></div><Link href="/app/ops">← Back to inbox</Link></header>
+      {query.error && <p className="product-alert error">{query.error}</p>}
+      <section className="issue-hero"><div><small>WHAT HAPPENED</small><h2>{issue.title}</h2><p>{issue.summary}</p></div><aside><small>ORDER VALUE AT RISK</small><strong>{currency.format(Number(issue.estimated_revenue_at_risk ?? 0))}</strong><p>Deterministic exposure from the affected order</p></aside></section>
+      <div className="issue-detail-grid">
+        <section className="issue-facts">
+          <article><small>ORDER</small><strong>{orderNumber}</strong><p>{String(order?.status ?? "—").replaceAll("_", " ")}</p></article>
+          <article><small>FULFILLMENT</small><strong>{String(metadata.fulfillment_status ?? order?.fulfillment_status ?? "—").replaceAll("_", " ")}</strong><p>{String(metadata.payment_method ?? order?.payment_method ?? "—")}</p></article>
+          <article><small>DELIVERY ATTEMPTS</small><strong>{Number(metadata.delivery_attempts ?? order?.delivery_attempts ?? 0)}</strong><p>{issue.type === "RTO_RISK" ? "Failed attempts increase RTO exposure" : "Current recorded attempts"}</p></article>
+          <article><small>WHY</small><h3>{String(issue.type).replaceAll("_", " ")}</h3><p>{issue.type === "RTO_RISK" ? "Actnivo flags COD orders after failed delivery attempts." : "Actnivo compares current fulfillment state with the promised ship time."}</p></article>
+        </section>
+        <section className="issue-action-panel"><small>RECOMMENDED ACTION</small><h2>{String(metadata.recommendation_title ?? "Create order recovery task")}</h2><p>{String(metadata.recommendation_detail ?? "Prepare an assisted operator task.")}</p>
+          <div><span>Execution mode<strong>ASSISTED</strong></span><span>External action<strong>Not performed</strong></span><span>Revenue exposed<strong>{currency.format(Number(issue.estimated_revenue_at_risk ?? 0))}</strong></span></div>
+          {latestAction ? <Link className="saas-primary" href={`/app/actions/${latestAction.id}`}>View recovery action</Link> : manageable && issue.status !== "ignored" ? <form action={prepareOrderRecoveryTask}><input type="hidden" name="issue_id" value={issue.id} /><button className="saas-primary" type="submit">Prepare recovery task</button></form> : null}
+          {manageable && !["resolved", "ignored"].includes(issue.status) && <form action={ignoreIssue} className="ignore-action"><input type="hidden" name="issue_id" value={issue.id} /><button type="submit">Ignore issue</button></form>}
+        </section>
+      </div>
+      <section className="formula-note"><small>ORDER EXCEPTION LOGIC</small><p>Promised ship timing, fulfillment state, COD status, and delivery attempts determine the issue. The LLM does not calculate the risk classification or order value at risk.</p></section>
+    </div>;
+  }
+
   return <div className="product-page issue-detail-page">
-    <header className="product-page-header"><div><p>OPS INBOX / {String(issue.type).replaceAll("_", " ")}</p><h1>{sku.product_name}</h1><span>{issue.channel ? titleCaseChannel(issue.channel) : "All channels"} · {location?.name ?? "All locations"}</span></div><Link href="/app/ops">← Back to inbox</Link></header>
+    <header className="product-page-header"><div><p>OPS INBOX / {String(issue.type).replaceAll("_", " ")}</p><h1>{sku?.product_name ?? issue.title}</h1><span>{issue.channel ? titleCaseChannel(issue.channel) : "All channels"} · {location?.name ?? "All locations"}</span></div><Link href="/app/ops">← Back to inbox</Link></header>
     {query.error && <p className="product-alert error">{query.error}</p>}{query.modified && <p className="product-alert success">Recommendation quantity updated and logged.</p>}
     <section className="issue-hero"><div><small>WHAT HAPPENED</small><h2>{isPoIssue ? issue.title : `Stockout predicted in ${Number(issue.days_of_cover ?? 0).toFixed(1)} days`}</h2><p>{issue.summary}</p></div><aside><small>ESTIMATED REVENUE AT RISK</small><strong>{currency.format(Number(issue.estimated_revenue_at_risk ?? 0))}</strong><p>{issue.estimated_shortage_units ?? 0} units × {currency.format(Number(metadata.selling_price ?? 0))}</p></aside></section>
     <div className="issue-detail-grid">
