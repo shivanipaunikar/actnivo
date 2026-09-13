@@ -4,7 +4,7 @@ import { assertCanManageInventory } from "@/lib/auth/roles";
 import { prepareCopilotAction, type CopilotProposalType } from "@/lib/copilot/actions";
 import { createClient } from "@/lib/supabase/server";
 
-const allowed = new Set<CopilotProposalType>(["CREATE_TRANSFER_PLAN", "CREATE_REPLENISHMENT_PLAN", "EXPEDITE_PO"]);
+const allowed = new Set<CopilotProposalType>(["CREATE_TRANSFER_PLAN", "CREATE_REPLENISHMENT_PLAN", "EXPEDITE_PO", "CREATE_ORDER_RECOVERY_TASK"]);
 
 export async function POST(request: Request) {
   const user = await getAuthenticatedUser();
