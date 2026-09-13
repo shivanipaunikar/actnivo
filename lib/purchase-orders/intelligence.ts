@@ -1,5 +1,5 @@
-import { selectTransferRecommendation, type ForecastSettings, type TransferCandidate } from "@/lib/operations/forecasting";
-import type { PurchaseOrderRisk } from "./types";
+import { selectTransferRecommendation, type ForecastSettings, type TransferCandidate } from "../operations/forecasting.ts";
+import type { PurchaseOrderRisk } from "./types.ts";
 
 const DAY_MS = 86_400_000;
 
