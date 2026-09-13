@@ -1,20 +1,25 @@
 # Sprint 4B implementation status
 
-Implementation is in progress on `sprint-4b-po-intelligence`.
+Sprint 4B implementation is complete on `sprint-4b-po-intelligence` and validated by CI.
 
-Built so far:
+Delivered:
 - API-first normalized purchase order model
-- organization-scoped PO tables and RLS
+- source-agnostic connector contract and operational connector sync boundary
+- organization-scoped PO tables, tenant-safe foreign keys, RLS and additive migration
 - deterministic PO-vs-stockout risk calculations
+- late, shortage, partial-receipt and arrives-after-stockout issue detection
 - safe-transfer-first recommendations with assisted expedite fallback
 - Purchase Orders list and detail workspaces
 - receipt updates and PO status progression
-- PO issue generation for Ops Inbox
-- assisted `EXPEDITE_PO` action preparation and verification hooks
-- unit coverage for risk math, status transitions, and migration invariants
+- PO issue integration into Ops Inbox
+- assisted `EXPEDITE_PO` action preparation with explicit no-fake-execution semantics
+- expedite outcome verification against actual receipt timing
+- unit coverage for risk math, status transitions and migration invariants
+- GitHub CI covering dependency install, TypeScript, production build and the full test suite
 
-Before merge:
-- wire PO issue-specific UX into Ops Inbox and Action detail
-- run CI (typecheck/build/tests) and fix any failures
-- verify the migration parses cleanly against PostgreSQL/Supabase
-- merge only after checks are green
+Validation at merge:
+- `npm run typecheck` — pass
+- `npm run build` — pass
+- `node --experimental-strip-types --test tests/*.test.mjs` — pass
+
+The SQL migration is additive and covered by migration-invariant tests. Applying it to the target Supabase project remains a deployment step; no production database was mutated from this implementation branch.
