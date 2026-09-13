@@ -6,6 +6,7 @@ import { getQuickCommerceCommandCenter } from "@/lib/data/quick-commerce";
 import { getPurchaseOrderWorkspace } from "@/lib/data/purchase-orders";
 
 const activeIssue = (status: string) => !["resolved", "ignored"].includes(status);
+const record = (value: unknown) => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 
 export type CopilotContext = Awaited<ReturnType<typeof buildCopilotContext>>;
 
@@ -21,20 +22,26 @@ export async function buildCopilotContext(supabase: SupabaseClient<Database>, or
 
   const topRisks = ops.filter((item) => activeIssue(item.issue.status))
     .sort((a, b) => Number(b.issue.estimated_revenue_at_risk ?? 0) - Number(a.issue.estimated_revenue_at_risk ?? 0))
-    .slice(0, 12).map((item) => ({
-      id: item.issue.id, type: item.issue.type, severity: item.issue.severity, status: item.issue.status,
-      title: item.issue.title, summary: item.issue.summary, sku: item.sku?.master_sku ?? null,
-      product: item.sku?.product_name ?? null, location: item.location?.name ?? null, channel: item.issue.channel,
-      daysOfCover: item.issue.days_of_cover === null ? null : Number(item.issue.days_of_cover),
-      shortageUnits: item.issue.estimated_shortage_units, revenueAtRisk: Number(item.issue.estimated_revenue_at_risk ?? 0),
-      confidence: item.issue.confidence === null ? null : Number(item.issue.confidence),
-      recommendation: item.recommendation ? {
-        quantity: item.recommendation.quantity, sourceLocation: item.sourceLocation?.name ?? null,
-        destinationLocation: item.location?.name ?? null, revenueProtected: Number(item.recommendation.estimated_revenue_protected),
-        reason: item.recommendation.reason,
-      } : null,
-      href: `/app/ops/issues/${item.issue.id}`,
-    }));
+    .slice(0, 12).map((item) => {
+      const metadata = record(item.issue.metadata);
+      return {
+        id: item.issue.id, type: item.issue.type, severity: item.issue.severity, status: item.issue.status,
+        title: item.issue.title, summary: item.issue.summary, sku: item.sku?.master_sku ?? null,
+        product: item.sku?.product_name ?? null, location: item.location?.name ?? null, channel: item.issue.channel,
+        daysOfCover: item.issue.days_of_cover === null ? null : Number(item.issue.days_of_cover),
+        shortageUnits: item.issue.estimated_shortage_units, revenueAtRisk: Number(item.issue.estimated_revenue_at_risk ?? 0),
+        confidence: item.issue.confidence === null ? null : Number(item.issue.confidence),
+        recommendationType: typeof metadata.recommendation_type === "string" ? metadata.recommendation_type : null,
+        purchaseOrderId: typeof metadata.purchase_order_id === "string" ? metadata.purchase_order_id : null,
+        poNumber: typeof metadata.po_number === "string" ? metadata.po_number : null,
+        recommendation: item.recommendation ? {
+          quantity: item.recommendation.quantity, sourceLocation: item.sourceLocation?.name ?? null,
+          destinationLocation: item.location?.name ?? null, revenueProtected: Number(item.recommendation.estimated_revenue_protected),
+          reason: item.recommendation.reason,
+        } : null,
+        href: `/app/ops/issues/${item.issue.id}`,
+      };
+    });
 
   const inventoryPosition = inventory.summaries.slice()
     .sort((a, b) => (a.daysOfCover ?? Number.POSITIVE_INFINITY) - (b.daysOfCover ?? Number.POSITIVE_INFINITY))
