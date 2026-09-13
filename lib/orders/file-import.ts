@@ -1,6 +1,6 @@
-import { parseImportFile } from "@/lib/imports/parser";
-import { normalizeChannel } from "@/lib/imports/validation";
-import type { RawImportRow, RawValue } from "@/lib/imports/types";
+import { parseImportFile } from "../imports/parser.ts";
+import { normalizeChannel } from "../imports/validation.ts";
+import type { RawImportRow, RawValue } from "../imports/types";
 import type { FulfillmentStatus, NormalizedOrder, OrderStatus, PaymentMethod } from "./types";
 
 const aliases: Record<string, string[]> = {
