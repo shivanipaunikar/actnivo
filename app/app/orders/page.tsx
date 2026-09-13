@@ -5,13 +5,14 @@ import { getOrdersWorkspace } from "@/lib/data/orders";
 
 const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
-export default async function OrdersPage() {
-  const { organization } = await requireAppContext();
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ imported?: string }> }) {
+  const [{ organization }, query] = await Promise.all([requireAppContext(), searchParams]);
   const supabase = await createClient();
   const data = await getOrdersWorkspace(supabase as any, organization.id);
 
   return <div className="product-page">
-    <header className="product-page-header"><div><p>OPERATIONS</p><h1>Orders</h1><span>Unified fulfillment health across channels, ranked by financial exposure.</span></div><Link href="/app/integrations">Manage data sources →</Link></header>
+    <header className="product-page-header"><div><p>OPERATIONS</p><h1>Orders</h1><span>Unified fulfillment health across channels, ranked by financial exposure.</span></div><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Link className="saas-primary" href="/app/orders/import">Import order file</Link><Link href="/app/integrations">Manage data sources →</Link></div></header>
+    {query.imported && <p className="product-alert success">Imported {Number(query.imported).toLocaleString("en-IN")} order{Number(query.imported) === 1 ? "" : "s"}. Order health and Copilot are using the new data.</p>}
     <section className="saas-metrics">
       <article><small>OPEN ORDERS</small><strong>{data.summary.openOrders}</strong><p>{money.format(data.summary.openOrderValue)} open value</p></article>
       <article><small>REVENUE AT RISK</small><strong>{money.format(data.summary.revenueAtRisk)}</strong><p>Across active order exceptions</p></article>
@@ -30,7 +31,7 @@ export default async function OrdersPage() {
           <span>{money.format(Number(order.order_value ?? 0))}</span>
           <span>{order.exception ? <><strong>{order.exception.type.replaceAll("_", " ")}</strong><small>{money.format(order.exception.revenueAtRisk)} at risk</small></> : "Healthy"}</span>
         </Link>)}
-      </div> : <div className="product-empty"><span>▱</span><h3>No orders connected yet.</h3><p>Orders will use the same normalized model whether they arrive by API, OMS, marketplace connector, or file bootstrap.</p></div>}
+      </div> : <div className="product-empty"><span>▱</span><h3>No orders connected yet.</h3><p>Orders will use the same normalized model whether they arrive by API, OMS, marketplace connector, or file bootstrap.</p><Link className="saas-primary" href="/app/orders/import">Import test orders</Link></div>}
     </section>
   </div>;
 }
