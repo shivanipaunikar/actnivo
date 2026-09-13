@@ -1,0 +1,166 @@
+/* Colorful luxury accents for the logged-in Actnivo MVP only. */
+.saas-shell {
+  --violet:#6c5cf6;
+  --violet-soft:#f1eeff;
+  --blue:#3f82ff;
+  --blue-soft:#edf4ff;
+  --cyan:#18b7c9;
+  --cyan-soft:#eafafc;
+  --mint:#2ebc87;
+  --mint-soft:#eaf8f2;
+  --amber:#f0a43c;
+  --amber-soft:#fff6e7;
+  --coral:#ef6f61;
+  --coral-soft:#fff0ed;
+  --pink:#d760d8;
+  --pink-soft:#fbecfb;
+  --indigo:#4f5bd5;
+  --indigo-soft:#eef0ff;
+}
+
+/* Keep the canvas premium-neutral, add color to information hierarchy. */
+.saas-content .product-page-header > div > p,
+.saas-content .kicker { color:var(--violet)!important; }
+
+/* Metric cards get distinct accent personalities. */
+.saas-content .saas-metrics > article,
+.saas-content .value-metric-grid > article,
+.saas-content .metric {
+  position:relative;
+  overflow:hidden;
+}
+.saas-content .saas-metrics > article::before,
+.saas-content .value-metric-grid > article::before,
+.saas-content .metric::before {
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:3px;
+  background:var(--violet);
+}
+.saas-content .saas-metrics > article:nth-child(6n+1)::before,
+.saas-content .value-metric-grid > article:nth-child(6n+1)::before,
+.saas-content .metric:nth-child(6n+1)::before { background:linear-gradient(90deg,var(--violet),#8f7cff); }
+.saas-content .saas-metrics > article:nth-child(6n+2)::before,
+.saas-content .value-metric-grid > article:nth-child(6n+2)::before,
+.saas-content .metric:nth-child(6n+2)::before { background:linear-gradient(90deg,var(--blue),#6aa5ff); }
+.saas-content .saas-metrics > article:nth-child(6n+3)::before,
+.saas-content .value-metric-grid > article:nth-child(6n+3)::before,
+.saas-content .metric:nth-child(6n+3)::before { background:linear-gradient(90deg,var(--mint),#66d7ad); }
+.saas-content .saas-metrics > article:nth-child(6n+4)::before,
+.saas-content .value-metric-grid > article:nth-child(6n+4)::before,
+.saas-content .metric:nth-child(6n+4)::before { background:linear-gradient(90deg,var(--amber),#ffc766); }
+.saas-content .saas-metrics > article:nth-child(6n+5)::before,
+.saas-content .value-metric-grid > article:nth-child(6n+5)::before,
+.saas-content .metric:nth-child(6n+5)::before { background:linear-gradient(90deg,var(--coral),#ff9c8f); }
+.saas-content .saas-metrics > article:nth-child(6n+6)::before,
+.saas-content .value-metric-grid > article:nth-child(6n+6)::before,
+.saas-content .metric:nth-child(6n+6)::before { background:linear-gradient(90deg,var(--pink),#ee91ef); }
+
+/* Soft color washes for metric cards without hurting readability. */
+.saas-content .saas-metrics > article:nth-child(6n+1),
+.saas-content .value-metric-grid > article:nth-child(6n+1) { background:linear-gradient(180deg,#fff 20%,#faf8ff 100%)!important; }
+.saas-content .saas-metrics > article:nth-child(6n+2),
+.saas-content .value-metric-grid > article:nth-child(6n+2) { background:linear-gradient(180deg,#fff 20%,#f7faff 100%)!important; }
+.saas-content .saas-metrics > article:nth-child(6n+3),
+.saas-content .value-metric-grid > article:nth-child(6n+3) { background:linear-gradient(180deg,#fff 20%,#f6fcf9 100%)!important; }
+.saas-content .saas-metrics > article:nth-child(6n+4),
+.saas-content .value-metric-grid > article:nth-child(6n+4) { background:linear-gradient(180deg,#fff 20%,#fffaf1 100%)!important; }
+.saas-content .saas-metrics > article:nth-child(6n+5),
+.saas-content .value-metric-grid > article:nth-child(6n+5) { background:linear-gradient(180deg,#fff 20%,#fff8f6 100%)!important; }
+.saas-content .saas-metrics > article:nth-child(6n+6),
+.saas-content .value-metric-grid > article:nth-child(6n+6) { background:linear-gradient(180deg,#fff 20%,#fff8ff 100%)!important; }
+
+/* Generic progress/chart bars: cycle colors instead of one-blue-everywhere. */
+.saas-content .bar i,
+.saas-content .tiny-bars i,
+.saas-content [class*="progress"] > i,
+.saas-content [class*="progress"] > span,
+.saas-content [class*="bar"] > i {
+  background:linear-gradient(90deg,var(--violet),#8b7cff)!important;
+}
+.saas-content .channel-row:nth-child(6n+1) .bar i,
+.saas-content .health-list > *:nth-child(6n+1) .bar i { background:linear-gradient(90deg,var(--blue),#6aa5ff)!important; }
+.saas-content .channel-row:nth-child(6n+2) .bar i,
+.saas-content .health-list > *:nth-child(6n+2) .bar i { background:linear-gradient(90deg,var(--mint),#69d5b0)!important; }
+.saas-content .channel-row:nth-child(6n+3) .bar i,
+.saas-content .health-list > *:nth-child(6n+3) .bar i { background:linear-gradient(90deg,var(--amber),#ffc768)!important; }
+.saas-content .channel-row:nth-child(6n+4) .bar i,
+.saas-content .health-list > *:nth-child(6n+4) .bar i { background:linear-gradient(90deg,var(--coral),#ff9b8e)!important; }
+.saas-content .channel-row:nth-child(6n+5) .bar i,
+.saas-content .health-list > *:nth-child(6n+5) .bar i { background:linear-gradient(90deg,var(--pink),#ed91ee)!important; }
+.saas-content .channel-row:nth-child(6n+6) .bar i,
+.saas-content .health-list > *:nth-child(6n+6) .bar i { background:linear-gradient(90deg,var(--indigo),#7c86ef)!important; }
+
+/* Value Generated inline bars currently use inline violet backgrounds; override by position. */
+.saas-content .value-page .product-card > div > div:nth-child(6n+1) > div:last-child > div { background:linear-gradient(90deg,var(--blue),#72aaff)!important; }
+.saas-content .value-page .product-card > div > div:nth-child(6n+2) > div:last-child > div { background:linear-gradient(90deg,var(--mint),#68d7b0)!important; }
+.saas-content .value-page .product-card > div > div:nth-child(6n+3) > div:last-child > div { background:linear-gradient(90deg,var(--amber),#ffc866)!important; }
+.saas-content .value-page .product-card > div > div:nth-child(6n+4) > div:last-child > div { background:linear-gradient(90deg,var(--coral),#ff9d90)!important; }
+.saas-content .value-page .product-card > div > div:nth-child(6n+5) > div:last-child > div { background:linear-gradient(90deg,var(--pink),#ee95ee)!important; }
+.saas-content .value-page .product-card > div > div:nth-child(6n+6) > div:last-child > div { background:linear-gradient(90deg,var(--violet),#9b8aff)!important; }
+
+/* Cards and section headers get subtle category cues. */
+.saas-content .product-card:nth-of-type(6n+1) > header small { color:var(--violet); }
+.saas-content .product-card:nth-of-type(6n+2) > header small { color:var(--blue); }
+.saas-content .product-card:nth-of-type(6n+3) > header small { color:var(--mint); }
+.saas-content .product-card:nth-of-type(6n+4) > header small { color:#c77a13; }
+.saas-content .product-card:nth-of-type(6n+5) > header small { color:var(--coral); }
+.saas-content .product-card:nth-of-type(6n+6) > header small { color:var(--pink); }
+
+/* Pills and states should feel semantic, not monochrome. */
+.saas-content [class*="badge"].success,
+.saas-content [class*="pill"].success,
+.saas-content [class*="chip"].success { background:var(--mint-soft)!important; color:#15724e!important; border-color:#bfe9d7!important; }
+.saas-content [class*="badge"].warning,
+.saas-content [class*="pill"].warning,
+.saas-content [class*="chip"].warning { background:var(--amber-soft)!important; color:#9a5f11!important; border-color:#f4d59e!important; }
+.saas-content [class*="badge"].danger,
+.saas-content [class*="pill"].danger,
+.saas-content [class*="chip"].danger { background:var(--coral-soft)!important; color:#ad493f!important; border-color:#f1c7c1!important; }
+
+/* Dashboard accents. */
+.saas-content .agent-strip { background:linear-gradient(100deg,#f6f3ff 0%,#eef8ff 52%,#effbf6 100%)!important; border-color:#dedbf9!important; }
+.saas-content .agent-spark { background:linear-gradient(145deg,var(--violet),var(--blue))!important; color:#fff!important; }
+.saas-content .action-card:nth-child(4n+1) { border-left-color:var(--coral)!important; }
+.saas-content .action-card:nth-child(4n+2) { border-left-color:var(--amber)!important; }
+.saas-content .action-card:nth-child(4n+3) { border-left-color:var(--blue)!important; }
+.saas-content .action-card:nth-child(4n+4) { border-left-color:var(--mint)!important; }
+
+/* Sidebar gets a richer but still executive palette. */
+.saas-sidebar { background:radial-gradient(circle at 18% -4%,rgba(108,92,246,.30),transparent 15rem),radial-gradient(circle at 110% 38%,rgba(24,183,201,.13),transparent 19rem),linear-gradient(180deg,#181820 0%,#101015 100%)!important; }
+.saas-sidebar nav a:nth-of-type(5n+1) > span { color:#9b8cff!important; }
+.saas-sidebar nav a:nth-of-type(5n+2) > span { color:#72a9ff!important; }
+.saas-sidebar nav a:nth-of-type(5n+3) > span { color:#58d1a3!important; }
+.saas-sidebar nav a:nth-of-type(5n+4) > span { color:#ffc15a!important; }
+.saas-sidebar nav a:nth-of-type(5n+5) > span { color:#f28b7d!important; }
+.saas-sidebar nav a.active { background:linear-gradient(90deg,rgba(108,92,246,.27),rgba(63,130,255,.10))!important; }
+
+/* Copilot can be a little more magical without becoming gimmicky. */
+.saas-content .copilot-orb { background:radial-gradient(circle at 25% 20%,#fff 0%,#f0ebff 36%,#e9f5ff 68%,#ebfbf5 100%)!important; color:var(--violet)!important; }
+.saas-content .copilot-head small,
+.saas-content .copilot-guardrails > small { color:var(--violet)!important; }
+.saas-content .copilot-proposal:nth-child(3n+1) { border-color:#ded8ff!important; background:#faf8ff!important; }
+.saas-content .copilot-proposal:nth-child(3n+2) { border-color:#cee1ff!important; background:#f7faff!important; }
+.saas-content .copilot-proposal:nth-child(3n+3) { border-color:#ccebdd!important; background:#f5fcf8!important; }
+
+/* Integrations/source cards get visual differentiation. */
+.saas-content .integration-source-grid > article:nth-child(4n+1) { background:linear-gradient(180deg,#fff,#faf8ff)!important; }
+.saas-content .integration-source-grid > article:nth-child(4n+2) { background:linear-gradient(180deg,#fff,#f5f9ff)!important; }
+.saas-content .integration-source-grid > article:nth-child(4n+3) { background:linear-gradient(180deg,#fff,#f4fbf8)!important; }
+.saas-content .integration-source-grid > article:nth-child(4n+4) { background:linear-gradient(180deg,#fff,#fff9f2)!important; }
+
+/* Focus and primary interactions remain consistent and accessible. */
+.saas-content input:focus,
+.saas-content select:focus,
+.saas-content textarea:focus { border-color:#8478f5!important; box-shadow:0 0 0 4px rgba(108,92,246,.10)!important; }
+.saas-content .saas-primary,
+.saas-content a.saas-primary { background:linear-gradient(135deg,#675af7 0%,#5a67f2 52%,#477ff0 100%)!important; box-shadow:0 9px 22px rgba(91,85,247,.20)!important; }
+.saas-content .saas-primary:hover,
+.saas-content a.saas-primary:hover { background:linear-gradient(135deg,#5d51ef 0%,#515fe9 52%,#3974e6 100%)!important; }
+
+@media (max-width:760px) {
+  .saas-content .saas-metrics > article::before,
+  .saas-content .value-metric-grid > article::before,
+  .saas-content .metric::before { height:2px; }
+}
