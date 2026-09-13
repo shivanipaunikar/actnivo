@@ -91,8 +91,13 @@ declare
   complete_lines integer;
   received_lines integer;
 begin
-  target_po := coalesce(new.purchase_order_id, old.purchase_order_id);
-  org_id := coalesce(new.organization_id, old.organization_id);
+  if tg_op = 'DELETE' then
+    target_po := old.purchase_order_id;
+    org_id := old.organization_id;
+  else
+    target_po := new.purchase_order_id;
+    org_id := new.organization_id;
+  end if;
 
   select count(*),
          count(*) filter (where received_quantity >= coalesce(confirmed_quantity, ordered_quantity)),
@@ -114,7 +119,11 @@ begin
     else actual_delivery_date
   end
   where id = target_po and organization_id = org_id;
-  return coalesce(new, old);
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
 end;
 $$;
 
