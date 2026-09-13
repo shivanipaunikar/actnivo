@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { calculatePurchaseOrderRisk } from "@/lib/purchase-orders/intelligence";
+import type { PurchaseOrderRisk } from "@/lib/purchase-orders/types";
 import { defaultForecastSettings } from "@/lib/operations/forecasting";
 
 function latest(rows: any[], key: (row: any) => string, stamp: (row: any) => string) {
@@ -39,7 +40,7 @@ export async function getPurchaseOrderWorkspace(supabase: SupabaseClient<any>, o
     verificationTolerancePercent: Number(settingsResult.data.verification_tolerance_percent),
   } : defaultForecastSettings;
 
-  const risks = [];
+  const risks: PurchaseOrderRisk[] = [];
   for (const line of lines.data ?? []) {
     const po = (pos.data ?? []).find((item: any) => item.id === line.purchase_order_id);
     if (!po || ["RECEIVED", "CANCELLED"].includes(po.status)) continue;
@@ -50,7 +51,7 @@ export async function getPurchaseOrderWorkspace(supabase: SupabaseClient<any>, o
     const forecast = latestForecast.get(dimensionKey);
     if (!forecast) continue;
     const destinationSnapshot = latestSnapshot.get(dimensionKey);
-    const transferCandidates = [];
+    const transferCandidates: Array<{ locationId: string; locationName: string; availableQuantity: number; weightedDailyVelocity: number }> = [];
     for (const [key, snapshot] of latestSnapshot) {
       const [candidateSku, candidateLocation] = key.split("|");
       if (candidateSku !== line.sku_id || candidateLocation === po.destination_location_id) continue;
