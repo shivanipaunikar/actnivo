@@ -30,37 +30,28 @@ const navigation = [
   { label: "Settings", href: "/app/settings", icon: "⚙" },
 ] as const;
 
-// Client sidebar: mobile drawer today, desktop collapse controls can build on this stateful shell.
-export function AppSidebar({
-  organizationName,
-  userName,
-  email,
-  role,
-}: {
-  organizationName: string;
-  userName: string;
-  email: string;
-  role: OrganizationRole;
-}) {
+export function AppSidebar({ organizationName, userName, email, role }: { organizationName: string; userName: string; email: string; role: OrganizationRole; }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const initials = userName.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 
   return (
     <>
       <button className="saas-menu-toggle" type="button" aria-label="Open navigation" aria-expanded={open} onClick={() => setOpen(true)}>☰</button>
       {open && <button className="saas-sidebar-backdrop" type="button" aria-label="Close navigation" onClick={() => setOpen(false)} />}
-      <aside className={`saas-sidebar ${open ? "open" : ""}`}>
+      <aside className={`saas-sidebar ${open ? "open" : ""} ${collapsed ? "collapsed" : ""}`}>
         <div className="saas-sidebar-head">
           <Link href="/app/dashboard" className="saas-brand" onClick={() => setOpen(false)}><ActnivoMark /><span>actnivo</span></Link>
           <button type="button" aria-label="Close navigation" onClick={() => setOpen(false)}>×</button>
         </div>
+        <button className="saas-sidebar-collapse" type="button" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} onClick={() => setCollapsed((value) => !value)}>{collapsed ? "›" : "‹"}</button>
         <div className="saas-workspace"><span>{organizationName.slice(0, 1).toUpperCase()}</span><div><small>WORKSPACE</small><strong>{organizationName}</strong></div></div>
         <nav aria-label="Application navigation">
           {navigation.map((item, index) => "group" in item ? (
             <p key={`${item.group}-${index}`}>{item.group}</p>
           ) : (
-            <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) || (item.href === "/app/actions" && pathname.startsWith("/app/actions/")) || (item.href === "/app/ops" && pathname.startsWith("/app/ops/")) ? "active" : ""} onClick={() => setOpen(false)}>
+            <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} aria-current={pathname === item.href ? "page" : undefined} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) || (item.href === "/app/actions" && pathname.startsWith("/app/actions/")) || (item.href === "/app/ops" && pathname.startsWith("/app/ops/")) ? "active" : ""} onClick={() => setOpen(false)}>
               <span aria-hidden="true">{item.icon}</span><strong>{item.label}</strong>
             </Link>
           ))}
