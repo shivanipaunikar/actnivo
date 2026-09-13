@@ -54,4 +54,12 @@ export type PurchaseOrderRisk = {
   revenueAtRisk: number;
   confidence: number;
   recommendationType: "CREATE_TRANSFER_PLAN" | "EXPEDITE_PO";
+  transfer?: {
+    sourceLocationId: string;
+    sourceLocationName: string;
+    quantity: number;
+    sourceCoverageAfter: number;
+    destinationCoverageAfter: number;
+    estimatedRevenueProtected: number;
+  };
 };
