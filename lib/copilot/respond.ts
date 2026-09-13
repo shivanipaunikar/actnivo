@@ -41,7 +41,7 @@ function proposalForRisk(risk: CopilotContext["topRisks"][number]): CopilotActio
     return {
       issueId: risk.id,
       type: "CREATE_ORDER_RECOVERY_TASK",
-      label: risk.type === "RTO_RISK" ? "Prepare RTO recovery task" : "Prepare fulfillment recovery task",
+      label: String(risk.type) === "RTO_RISK" ? "Prepare RTO recovery task" : "Prepare fulfillment recovery task",
       summary: `${risk.title} · ${money.format(risk.revenueAtRisk)} at risk`,
       estimatedValueProtected: risk.revenueAtRisk,
       href: risk.href,
@@ -66,7 +66,7 @@ function proposalsForQuestion(question: string, context: CopilotContext) {
   if (q.includes("order") || q.includes("rto") || q.includes("cod") || q.includes("fulfillment") || q.includes("fulfilment") || q.includes("delivery attempt")) {
     candidates = candidates.filter((risk) => risk.recommendationType === "CREATE_ORDER_RECOVERY_TASK");
   } else if (q.includes("po") || q.includes("purchase order") || q.includes("arriv") || q.includes("supplier") || q.includes("expedite")) {
-    candidates = candidates.filter((risk) => risk.type.startsWith("PO_") || risk.recommendationType === "EXPEDITE_PO");
+    candidates = candidates.filter((risk) => String(risk.type).startsWith("PO_") || risk.recommendationType === "EXPEDITE_PO");
   } else if (q.includes("transfer") || q.includes("rebalanc")) {
     candidates = candidates.filter((risk) => Boolean(risk.recommendation));
   } else if (q.includes("replenish")) {
@@ -83,13 +83,13 @@ export function deterministicReply(question: string, context: CopilotContext): C
   if (q.includes("order") || q.includes("rto") || q.includes("cod") || q.includes("fulfillment") || q.includes("fulfilment") || q.includes("delivery attempt")) {
     if (!context.orderExceptions.length) return { answer: "I do not see any active order exceptions in the connected order data right now.", sources: [{ label: "Orders", href: "/app/orders" }], proposals: [], mode: "deterministic" };
     const candidates = q.includes("rto") || q.includes("cod")
-      ? context.orderExceptions.filter((order) => order.type === "RTO_RISK")
+      ? context.orderExceptions.filter((order: any) => order.type === "RTO_RISK")
       : context.orderExceptions;
     if (!candidates.length) return { answer: "I do not see any matching order exceptions in the connected data right now.", sources: [{ label: "Orders", href: "/app/orders" }], proposals: [], mode: "deterministic" };
-    const lines = candidates.slice(0, 6).map((order, index) => `${index + 1}. ${order.externalOrderId} · ${order.type.replaceAll("_", " ")} · ${money.format(order.revenueAtRisk)} at risk${order.paymentMethod === "COD" ? ` · ${order.deliveryAttempts} delivery attempt${order.deliveryAttempts === 1 ? "" : "s"}` : ""}.`);
+    const lines = candidates.slice(0, 6).map((order: any, index: number) => `${index + 1}. ${order.externalOrderId} · ${order.type.replaceAll("_", " ")} · ${money.format(order.revenueAtRisk)} at risk${order.paymentMethod === "COD" ? ` · ${order.deliveryAttempts} delivery attempt${order.deliveryAttempts === 1 ? "" : "s"}` : ""}.`);
     return {
       answer: `These orders need attention:\n\n${lines.join("\n")}\n\nThe classifications and financial exposure come from Actnivo's deterministic order engine.`,
-      sources: uniqueSources(candidates.slice(0, 6).map((order) => ({ label: order.externalOrderId, href: order.href }))),
+      sources: uniqueSources(candidates.slice(0, 6).map((order: any) => ({ label: order.externalOrderId, href: order.href }))),
       proposals,
       mode: "deterministic",
     };
