@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { NormalizedPurchaseOrder } from "./types";
+import type { NormalizedPurchaseOrder, PurchaseOrderConnector } from "./types.ts";
 
 function asUntyped(client: SupabaseClient) {
   return client as unknown as { from: (table: string) => any };
@@ -77,4 +77,33 @@ export async function ingestNormalizedPurchaseOrders(input: {
   }
 
   return { purchaseOrders, lines };
+}
+
+export async function syncPurchaseOrderConnector(input: {
+  supabase: SupabaseClient;
+  organizationId: string;
+  connector: PurchaseOrderConnector;
+  since?: string;
+  cursor?: string | null;
+}) {
+  const records = await input.connector.syncPurchaseOrders({
+    organizationId: input.organizationId,
+    since: input.since,
+    cursor: input.cursor,
+  });
+  for (const record of records) {
+    if (record.sourceType !== input.connector.sourceType) {
+      throw new Error(`Connector ${input.connector.sourceType} returned mismatched source type ${record.sourceType}.`);
+    }
+  }
+  const result = await ingestNormalizedPurchaseOrders({
+    supabase: input.supabase,
+    organizationId: input.organizationId,
+    records,
+  });
+  return {
+    ...result,
+    sourceType: input.connector.sourceType,
+    cursor: input.connector.getCursor ? await input.connector.getCursor() : null,
+  };
 }
