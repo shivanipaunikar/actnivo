@@ -7,6 +7,7 @@ import { assertCanManageInventory } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 import { parseOrderFile } from "@/lib/orders/file-import";
 import { ingestNormalizedOrders } from "@/lib/orders/ingestion";
+import { runOrderOperatingLoop } from "@/lib/orders/operating-loop";
 
 const message = (error: unknown) => error instanceof Error ? error.message : "Order import failed.";
 
@@ -28,9 +29,12 @@ export async function importOrders(formData: FormData) {
       records,
       actorId: context.user.id,
     });
+    const scan = await runOrderOperatingLoop(supabase as any, context.organization.id, context.user.id);
     revalidatePath("/app/orders");
+    revalidatePath("/app/ops");
+    revalidatePath("/app/actions");
     revalidatePath("/app/ai-copilot");
-    target = `/app/orders?imported=${result.imported}`;
+    target = `/app/orders?imported=${result.imported}&issues=${scan.created + scan.updated}`;
   } catch (error) {
     target = `/app/orders/import?error=${encodeURIComponent(message(error))}`;
   }
