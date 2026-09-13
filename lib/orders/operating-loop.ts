@@ -68,7 +68,9 @@ export async function runOrderOperatingLoop(
     .eq("organization_id", organizationId).not("order_id", "is", null)
     .in("status", ["open", "needs_approval", "running"]);
   if (activeIssuesResult.error) throw new Error(activeIssuesResult.error.message);
-  const activeByOrderAndType = new Map((activeIssuesResult.data ?? []).map((issue: any) => [`${issue.order_id}|${issue.type}`, issue]));
+  const activeByOrderAndType = new Map<string, any>(
+    (activeIssuesResult.data ?? []).map((issue: any): [string, any] => [`${issue.order_id}|${issue.type}`, issue]),
+  );
   const seenIssueIds = new Set<string>();
   let created = 0;
   let updated = 0;
