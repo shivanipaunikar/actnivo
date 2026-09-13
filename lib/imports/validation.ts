@@ -1,8 +1,8 @@
-import type { CommerceChannel, ImportSourceType } from "@/lib/supabase/database.types";
+import type { CommerceChannel } from "@/lib/supabase/database.types";
 import { sha256 } from "./parser.ts";
-import type { ColumnMapping, ImportDefinition, NormalizedImportRow, RawImportRow, RawValue, ValidatedRow } from "./types";
+import type { ColumnMapping, ImportDefinition, NormalizedImportRow, RawImportRow, RawValue, SupportedImportSourceType, ValidatedRow } from "./types";
 
-export const importDefinitions: Record<ImportSourceType, ImportDefinition> = {
+export const importDefinitions: Record<SupportedImportSourceType, ImportDefinition> = {
   inventory: {
     sourceType: "inventory",
     fields: [
@@ -40,6 +40,25 @@ export const importDefinitions: Record<ImportSourceType, ImportDefinition> = {
       { key: "pack_size", label: "Pack Size", required: false, aliases: ["pack size", "pack", "unit size"] },
     ],
   },
+  purchase_orders: {
+    sourceType: "purchase_orders",
+    fields: [
+      { key: "external_po_number", label: "External PO Number", required: true, aliases: ["external po number", "po number", "purchase order", "purchase order number", "po"] },
+      { key: "supplier_name", label: "Supplier Name", required: true, aliases: ["supplier name", "supplier", "vendor", "vendor name"] },
+      { key: "destination_location", label: "Destination Location", required: true, aliases: ["destination location", "destination", "warehouse", "location", "ship to"] },
+      { key: "channel", label: "Channel", required: false, aliases: ["channel", "marketplace", "platform"] },
+      { key: "order_date", label: "Order Date", required: true, aliases: ["order date", "po date", "created date"] },
+      { key: "expected_delivery_date", label: "Expected Delivery Date", required: true, aliases: ["expected delivery date", "expected arrival date", "eta", "delivery date"] },
+      { key: "currency", label: "Currency", required: false, aliases: ["currency"] },
+      { key: "total_value", label: "Total Value", required: false, aliases: ["total value", "po value", "order value", "total"] },
+      { key: "sku", label: "SKU", required: true, aliases: ["sku", "item sku", "seller sku", "merchant sku", "product sku"] },
+      { key: "ordered_quantity", label: "Ordered Quantity", required: true, aliases: ["ordered quantity", "order quantity", "quantity ordered", "qty"] },
+      { key: "confirmed_quantity", label: "Confirmed Quantity", required: false, aliases: ["confirmed quantity", "confirmed qty"] },
+      { key: "received_quantity", label: "Received Quantity", required: false, aliases: ["received quantity", "received qty", "quantity received"] },
+      { key: "unit_cost", label: "Unit Cost", required: false, aliases: ["unit cost", "cost", "unit price"] },
+      { key: "line_expected_delivery_date", label: "Line Expected Delivery Date", required: false, aliases: ["line expected delivery date", "line eta", "line delivery date"] },
+    ],
+  },
 };
 
 const channelAliases: Record<string, CommerceChannel> = {
@@ -74,7 +93,7 @@ export function normalizeChannel(value: RawValue | undefined): CommerceChannel |
   return key ? channelAliases[key] ?? null : null;
 }
 
-export function suggestColumnMapping(sourceType: ImportSourceType, headers: string[]): ColumnMapping {
+export function suggestColumnMapping(sourceType: SupportedImportSourceType, headers: string[]): ColumnMapping {
   const mapping: ColumnMapping = {};
   const normalizedHeaders = headers.map((header) => ({ header, normalized: header.toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim() }));
   for (const field of importDefinitions[sourceType].fields) {
@@ -164,20 +183,81 @@ function validateSales(row: RawImportRow, mapping: ColumnMapping) {
   return { normalized, errors, duplicateKey: `${sku}|${location ?? ""}|${channel ?? ""}|${date ?? ""}`.toLowerCase() };
 }
 
-export function validateRows(sourceType: ImportSourceType, rows: RawImportRow[], mapping: ColumnMapping): ValidatedRow[] {
+function validatePurchaseOrder(row: RawImportRow, mapping: ColumnMapping) {
+  const errors: string[] = [];
+  const poNumber = clean(mapped(row, mapping, "external_po_number"));
+  const supplierName = clean(mapped(row, mapping, "supplier_name"));
+  const destinationLocation = clean(mapped(row, mapping, "destination_location"));
+  const sku = clean(mapped(row, mapping, "sku"));
+  const orderDate = dateValue(mapped(row, mapping, "order_date"), true);
+  const expectedDeliveryDate = dateValue(mapped(row, mapping, "expected_delivery_date"), true);
+  const lineExpectedRaw = clean(mapped(row, mapping, "line_expected_delivery_date"));
+  const lineExpectedDeliveryDate = lineExpectedRaw ? dateValue(mapped(row, mapping, "line_expected_delivery_date"), true) : null;
+  const ordered = integerValue(mapped(row, mapping, "ordered_quantity"));
+  const confirmedRaw = clean(mapped(row, mapping, "confirmed_quantity"));
+  const confirmed = confirmedRaw ? integerValue(mapped(row, mapping, "confirmed_quantity")) : null;
+  const receivedRaw = clean(mapped(row, mapping, "received_quantity"));
+  const received = receivedRaw ? integerValue(mapped(row, mapping, "received_quantity")) : 0;
+  const channelRaw = mapped(row, mapping, "channel");
+  const channel = normalizeChannel(channelRaw);
+  const totalValueRaw = clean(mapped(row, mapping, "total_value"));
+  const totalValue = totalValueRaw ? numberValue(mapped(row, mapping, "total_value")) : null;
+  const unitCostRaw = clean(mapped(row, mapping, "unit_cost"));
+  const unitCost = unitCostRaw ? numberValue(mapped(row, mapping, "unit_cost")) : null;
+
+  if (!poNumber) errors.push("Missing external PO number");
+  if (!supplierName) errors.push("Missing supplier name");
+  if (!destinationLocation) errors.push("Missing destination location");
+  if (!sku) errors.push("Missing SKU");
+  if (!orderDate) errors.push("Order date is invalid");
+  if (!expectedDeliveryDate) errors.push("Expected delivery date is invalid");
+  if (lineExpectedRaw && !lineExpectedDeliveryDate) errors.push("Line expected delivery date is invalid");
+  if (ordered === null || ordered <= 0) errors.push("Ordered quantity must be a whole number greater than 0");
+  if (confirmedRaw && (confirmed === null || confirmed < 0)) errors.push("Confirmed quantity must be a whole number of 0 or more");
+  if (received === null || received < 0) errors.push("Received quantity must be a whole number of 0 or more");
+  const receiptLimit = confirmed ?? ordered;
+  if (received !== null && receiptLimit !== null && received > receiptLimit) errors.push("Received quantity cannot exceed confirmed or ordered quantity");
+  if (clean(channelRaw) && !channel) errors.push("Channel is not supported");
+  if (totalValueRaw && (totalValue === null || totalValue < 0)) errors.push("Total value must be 0 or more");
+  if (unitCostRaw && (unitCost === null || unitCost < 0)) errors.push("Unit cost must be 0 or more");
+
+  const normalized: NormalizedImportRow = {
+    external_po_number: poNumber,
+    supplier_name: supplierName,
+    destination_location: destinationLocation,
+    channel,
+    order_date: orderDate ?? "",
+    expected_delivery_date: expectedDeliveryDate ?? "",
+    currency: clean(mapped(row, mapping, "currency")) || "INR",
+    total_value: totalValue,
+    sku,
+    ordered_quantity: ordered ?? 0,
+    confirmed_quantity: confirmed,
+    received_quantity: received ?? 0,
+    unit_cost: unitCost,
+    line_expected_delivery_date: lineExpectedDeliveryDate,
+  };
+  return { normalized, errors, duplicateKey: `${poNumber}|${sku}`.toLowerCase() };
+}
+
+export function validateRows(sourceType: SupportedImportSourceType, rows: RawImportRow[], mapping: ColumnMapping): ValidatedRow[] {
   const required = importDefinitions[sourceType].fields.filter((field) => field.required);
   const missingMappings = required.filter((field) => !mapping[field.key]);
   if (missingMappings.length) throw new Error(`Map the required columns: ${missingMappings.map((field) => field.label).join(", ")}.`);
   const seen = new Set<string>();
   return rows.map((raw, index) => {
-    const result = sourceType === "inventory" ? validateInventory(raw, mapping) : validateSales(raw, mapping);
+    const result = sourceType === "inventory"
+      ? validateInventory(raw, mapping)
+      : sourceType === "sales"
+        ? validateSales(raw, mapping)
+        : validatePurchaseOrder(raw, mapping);
     const duplicate = seen.has(result.duplicateKey);
     seen.add(result.duplicateKey);
     return {
       rowNumber: index + 2,
       raw,
       normalized: result.errors.length ? null : result.normalized,
-      errors: duplicate ? [...result.errors, "Duplicate row in this file"] : result.errors,
+      errors: duplicate ? [...result.errors, "Duplicate PO/SKU row in this file"] : result.errors,
       duplicate,
       rowHash: sha256(JSON.stringify(result.normalized ?? raw)),
     };
