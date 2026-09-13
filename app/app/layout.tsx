@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/app/AppSidebar";
 import { AppInteractionFeedback } from "@/components/app/AppInteractionFeedback";
 import { requireAppContext } from "@/lib/auth/session";
 import "./polish.css";
+import "./sidebar-polish.css";
 
 export default async function ProtectedAppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireAppContext();
