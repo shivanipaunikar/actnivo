@@ -5,6 +5,7 @@ import "./polish.css";
 import "./sidebar-polish.css";
 import "./interaction-polish.css";
 import "./luxury-mvp.css";
+import "./colorful-mvp.css";
 
 export default async function ProtectedAppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireAppContext();
