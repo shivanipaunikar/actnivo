@@ -4,6 +4,7 @@ import { getInventoryData } from "@/lib/data/inventory";
 import { getOpsInbox, getActions, getValueMetrics } from "@/lib/data/operations";
 import { getQuickCommerceCommandCenter } from "@/lib/data/quick-commerce";
 import { getPurchaseOrderWorkspace } from "@/lib/data/purchase-orders";
+import { getOrdersWorkspace } from "@/lib/data/orders";
 
 const activeIssue = (status: string) => !["resolved", "ignored"].includes(status);
 const record = (value: unknown) => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -11,13 +12,14 @@ const record = (value: unknown) => value && typeof value === "object" && !Array.
 export type CopilotContext = Awaited<ReturnType<typeof buildCopilotContext>>;
 
 export async function buildCopilotContext(supabase: SupabaseClient<Database>, organizationId: string) {
-  const [inventory, ops, actions, value, quickCommerce, purchaseOrders] = await Promise.all([
+  const [inventory, ops, actions, value, quickCommerce, purchaseOrders, orders] = await Promise.all([
     getInventoryData(supabase, organizationId),
     getOpsInbox(supabase, organizationId),
     getActions(supabase, organizationId),
     getValueMetrics(supabase, organizationId),
     getQuickCommerceCommandCenter(supabase, organizationId),
     getPurchaseOrderWorkspace(supabase as any, organizationId),
+    getOrdersWorkspace(supabase as any, organizationId),
   ]);
 
   const topRisks = ops.filter((item) => activeIssue(item.issue.status))
@@ -59,6 +61,22 @@ export async function buildCopilotContext(supabase: SupabaseClient<Database>, or
     href: `/app/purchase-orders/${risk.poId}`,
   }));
 
+  const orderExceptions = orders.exceptions.slice(0, 12).map((order: any) => ({
+    orderId: order.id,
+    externalOrderId: order.external_order_id,
+    channel: order.channel,
+    fulfillmentStatus: order.fulfillment_status,
+    paymentMethod: order.payment_method,
+    orderValue: Number(order.order_value ?? 0),
+    type: order.exception.type,
+    severity: order.exception.severity,
+    reason: order.exception.reason,
+    revenueAtRisk: order.exception.revenueAtRisk,
+    deliveryAttempts: order.delivery_attempts,
+    promisedShipAt: order.promised_ship_at,
+    href: `/app/orders/${order.id}`,
+  }));
+
   const channelHealth = quickCommerce.channelHealth.map((channel) => ({
     channel: channel.channel, connected: channel.connected, health: channel.health, activeSkus: channel.activeSkus,
     lowStockSkus: channel.lowStockSkus, stockoutRiskSkus: channel.stockoutRiskSkus, revenueAtRisk: channel.revenueAtRisk,
@@ -87,8 +105,11 @@ export async function buildCopilotContext(supabase: SupabaseClient<Database>, or
       openPurchaseOrders: purchaseOrders.purchaseOrders.filter((po: any) => !["RECEIVED", "CANCELLED"].includes(po.status)).length,
       poRiskLines: purchaseOrders.risks.length,
       quickCommerceRevenueAtRisk: quickCommerce.summary.revenueAtRisk,
+      openOrders: orders.summary.openOrders,
+      orderExceptions: orders.exceptions.length,
+      orderRevenueAtRisk: orders.summary.revenueAtRisk,
     },
-    topRisks, inventoryPosition, purchaseOrderRisks: poRisks,
+    topRisks, inventoryPosition, purchaseOrderRisks: poRisks, orderExceptions,
     quickCommerce: { summary: quickCommerce.summary, channelHealth }, pendingActions, valueGenerated: value,
   };
 }
