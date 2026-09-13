@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { requireAppContext } from "@/lib/auth/session";
+import { canManageInventory } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 import { getOrdersWorkspace } from "@/lib/data/orders";
+import { refreshOrderIntelligence } from "./actions";
 
 const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
@@ -18,14 +20,18 @@ const orderRowStyle = {
   textDecoration: "none",
 } as const;
 
-export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ imported?: string }> }) {
-  const [{ organization }, query] = await Promise.all([requireAppContext(), searchParams]);
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ imported?: string; scanned?: string; issues?: string; resolved?: string; error?: string }> }) {
+  const [context, query] = await Promise.all([requireAppContext(), searchParams]);
+  const { organization } = context;
   const supabase = await createClient();
   const data = await getOrdersWorkspace(supabase as any, organization.id);
+  const manageable = canManageInventory(context.role);
 
   return <div className="product-page">
-    <header className="product-page-header"><div><p>OPERATIONS</p><h1>Orders</h1><span>Unified fulfillment health across channels, ranked by financial exposure.</span></div><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Link className="saas-primary" href="/app/orders/import">Import order file</Link><Link href="/app/integrations">Manage data sources →</Link></div></header>
-    {query.imported && <p className="product-alert success">Imported {Number(query.imported).toLocaleString("en-IN")} order{Number(query.imported) === 1 ? "" : "s"}. Order health and Copilot are using the new data.</p>}
+    <header className="product-page-header"><div><p>OPERATIONS</p><h1>Orders</h1><span>Unified fulfillment health across channels, ranked by financial exposure.</span></div><div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>{manageable && <form action={refreshOrderIntelligence}><button className="saas-primary" type="submit">Refresh order intelligence</button></form>}<Link className="saas-primary" href="/app/orders/import">Import order file</Link><Link href="/app/integrations">Manage data sources →</Link></div></header>
+    {query.imported && <p className="product-alert success">Imported {Number(query.imported).toLocaleString("en-IN")} order{Number(query.imported) === 1 ? "" : "s"}. Order health, Ops Inbox, and Copilot are using the new data.</p>}
+    {query.scanned && <p className="product-alert success">Scanned {Number(query.scanned).toLocaleString("en-IN")} orders · {Number(query.issues ?? 0).toLocaleString("en-IN")} active exceptions refreshed · {Number(query.resolved ?? 0).toLocaleString("en-IN")} resolved.</p>}
+    {query.error && <p className="product-alert error">{query.error}</p>}
     <section className="saas-metrics">
       <article><small>OPEN ORDERS</small><strong>{data.summary.openOrders}</strong><p>{money.format(data.summary.openOrderValue)} open value</p></article>
       <article><small>REVENUE AT RISK</small><strong>{money.format(data.summary.revenueAtRisk)}</strong><p>Across active order exceptions</p></article>
