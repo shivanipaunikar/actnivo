@@ -17,29 +17,32 @@ export async function getOpsInbox(supabase: SupabaseClient<Database>, organizati
   const skuById = new Map(skus.map((row) => [row.id, row]));
   const locationById = new Map(locations.map((row) => [row.id, row]));
   const recommendationByIssue = new Map(recommendations.map((row) => [row.issue_id, row]));
-  return issues.map((issue) => ({ issue, sku: skuById.get(issue.sku_id), location: issue.location_id ? locationById.get(issue.location_id) : undefined, recommendation: recommendationByIssue.get(issue.id), sourceLocation: recommendationByIssue.get(issue.id)?.source_location_id ? locationById.get(recommendationByIssue.get(issue.id)!.source_location_id!) : undefined }));
+  return issues.map((issue) => ({ issue, sku: issue.sku_id ? skuById.get(issue.sku_id) : undefined, location: issue.location_id ? locationById.get(issue.location_id) : undefined, recommendation: recommendationByIssue.get(issue.id), sourceLocation: recommendationByIssue.get(issue.id)?.source_location_id ? locationById.get(recommendationByIssue.get(issue.id)!.source_location_id!) : undefined }));
 }
 
 export async function getIssueDetail(supabase: SupabaseClient<Database>, organizationId: string, issueId: string) {
-  const issueResult = await supabase.from("issues").select("*").eq("organization_id", organizationId).eq("id", issueId).maybeSingle();
+  const db = supabase as any;
+  const issueResult = await db.from("issues").select("*").eq("organization_id", organizationId).eq("id", issueId).maybeSingle();
   if (issueResult.error) throw new Error(issueResult.error.message);
   if (!issueResult.data) return null;
-  const issue = issueResult.data;
-  const [skuResult, locationResult, forecastResult, recommendationResult, actions, auditEvents] = await Promise.all([
-    supabase.from("skus").select("*").eq("organization_id", organizationId).eq("id", issue.sku_id).single(),
-    issue.location_id ? supabase.from("locations").select("*").eq("organization_id", organizationId).eq("id", issue.location_id).single() : Promise.resolve({ data: null, error: null }),
-    issue.forecast_calculation_id ? supabase.from("forecast_calculations").select("*").eq("organization_id", organizationId).eq("id", issue.forecast_calculation_id).single() : Promise.resolve({ data: null, error: null }),
-    supabase.from("issue_recommendations").select("*").eq("organization_id", organizationId).eq("issue_id", issue.id).maybeSingle(),
-    allRows<Action>(supabase.from("actions").select("*").eq("organization_id", organizationId).eq("issue_id", issue.id).order("created_at", { ascending: false })),
-    allRows<AuditEvent>(supabase.from("audit_events").select("*").eq("organization_id", organizationId).eq("entity_id", issue.id).order("created_at", { ascending: false })),
+  const issue = issueResult.data as any;
+  const [skuResult, locationResult, forecastResult, recommendationResult, actions, auditEvents, orderResult] = await Promise.all([
+    issue.sku_id ? db.from("skus").select("*").eq("organization_id", organizationId).eq("id", issue.sku_id).single() : Promise.resolve({ data: null, error: null }),
+    issue.location_id ? db.from("locations").select("*").eq("organization_id", organizationId).eq("id", issue.location_id).single() : Promise.resolve({ data: null, error: null }),
+    issue.forecast_calculation_id ? db.from("forecast_calculations").select("*").eq("organization_id", organizationId).eq("id", issue.forecast_calculation_id).single() : Promise.resolve({ data: null, error: null }),
+    db.from("issue_recommendations").select("*").eq("organization_id", organizationId).eq("issue_id", issue.id).maybeSingle(),
+    allRows<Action>(db.from("actions").select("*").eq("organization_id", organizationId).eq("issue_id", issue.id).order("created_at", { ascending: false })),
+    allRows<AuditEvent>(db.from("audit_events").select("*").eq("organization_id", organizationId).eq("entity_id", issue.id).order("created_at", { ascending: false })),
+    issue.order_id ? db.from("orders").select("*").eq("organization_id", organizationId).eq("id", issue.order_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
   ]);
   if (skuResult.error) throw new Error(skuResult.error.message);
   if (locationResult.error) throw new Error(locationResult.error.message);
   if (forecastResult.error) throw new Error(forecastResult.error.message);
   if (recommendationResult.error) throw new Error(recommendationResult.error.message);
-  const sourceResult = recommendationResult.data?.source_location_id ? await supabase.from("locations").select("*").eq("organization_id", organizationId).eq("id", recommendationResult.data.source_location_id).single() : { data: null, error: null };
+  if (orderResult.error) throw new Error(orderResult.error.message);
+  const sourceResult = recommendationResult.data?.source_location_id ? await db.from("locations").select("*").eq("organization_id", organizationId).eq("id", recommendationResult.data.source_location_id).single() : { data: null, error: null };
   if (sourceResult.error) throw new Error(sourceResult.error.message);
-  return { issue, sku: skuResult.data, location: locationResult.data, forecast: forecastResult.data as ForecastCalculation | null, recommendation: recommendationResult.data, sourceLocation: sourceResult.data, actions, auditEvents };
+  return { issue, sku: skuResult.data as Sku | null, location: locationResult.data as Location | null, forecast: forecastResult.data as ForecastCalculation | null, recommendation: recommendationResult.data as IssueRecommendation | null, sourceLocation: sourceResult.data as Location | null, actions, auditEvents, order: orderResult.data };
 }
 
 export async function getActions(supabase: SupabaseClient<Database>, organizationId: string) {
