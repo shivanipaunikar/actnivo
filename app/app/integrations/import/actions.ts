@@ -11,8 +11,9 @@ import { parseImportFile, safeFilename, sha256 } from "@/lib/imports/parser";
 import { matchSku } from "@/lib/imports/matching";
 import { processImportJob } from "@/lib/imports/process";
 import { runOperatingLoop } from "@/lib/operations/engine";
+import { runPurchaseOrderIntelligence } from "@/lib/purchase-orders/engine";
 import { importDefinitions, validateRows } from "@/lib/imports/validation";
-import type { ColumnMapping, RawImportRow } from "@/lib/imports/types";
+import type { ColumnMapping, RawImportRow, SupportedImportSourceType } from "@/lib/imports/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const BATCH_SIZE = 400;
@@ -55,8 +56,10 @@ export async function uploadImport(formData: FormData) {
   let supabase: SupabaseClient<Database> | null = null;
   try {
     assertCanManageInventory(context.role);
-    const sourceType = String(formData.get("source_type") ?? "");
-    if (sourceType !== "inventory" && sourceType !== "sales") throw new Error("Choose inventory or sales data.");
+    const sourceType = String(formData.get("source_type") ?? "") as SupportedImportSourceType;
+    if (!["inventory", "sales", "purchase_orders"].includes(sourceType)) {
+      throw new Error("Choose inventory, sales, or purchase order data.");
+    }
     const file = formData.get("file");
     if (!(file instanceof File) || !file.name) throw new Error("Choose a CSV or XLSX file.");
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -75,7 +78,7 @@ export async function uploadImport(formData: FormData) {
     const { error: jobError } = await supabase.from("import_jobs").insert({
       id: jobId,
       organization_id: context.organization.id,
-      source_type: sourceType,
+      source_type: sourceType as ImportJob["source_type"],
       filename: file.name,
       storage_path: storagePath,
       status: "uploaded",
@@ -147,14 +150,15 @@ export async function mapImportColumns(formData: FormData) {
     const job = await getImportJob(supabase, context.organization.id, jobId);
     if (!job) throw new Error("Import job not found.");
     if (job.status === "completed") throw new Error("Completed imports cannot be remapped.");
+    const sourceType = String(job.source_type) as SupportedImportSourceType;
     const mapping: ColumnMapping = {};
-    for (const field of importDefinitions[job.source_type].fields) {
+    for (const field of importDefinitions[sourceType].fields) {
       const header = String(formData.get(`map_${field.key}`) ?? "").trim();
       if (header) mapping[field.key] = header;
     }
     const dbRows = await getAllImportRows(supabase, context.organization.id, job.id);
     const rawRows = dbRows.map((row) => row.raw_data as RawImportRow);
-    const validated = validateRows(job.source_type, rawRows, mapping);
+    const validated = validateRows(sourceType, rawRows, mapping);
     const candidates = await getAllSkus(supabase, context.organization.id);
     const existingMappings = await getMappings(supabase, context.organization.id, job.source_type);
     const mappingBySource = new Map(existingMappings.map((item) => [item.source_sku, item]));
@@ -163,22 +167,26 @@ export async function mapImportColumns(formData: FormData) {
     for (const row of validated) {
       const normalized = row.normalized;
       if (!normalized || row.duplicate || mappingBySource.has(normalized.sku)) continue;
+      const productName = "product_name" in normalized ? normalized.product_name : normalized.sku;
+      const barcode = "barcode" in normalized ? normalized.barcode : null;
+      const variant = "variant" in normalized ? normalized.variant : null;
+      const packSize = "pack_size" in normalized ? normalized.pack_size : null;
       const match = matchSku({
         sku: normalized.sku,
-        barcode: normalized.barcode,
-        productName: normalized.product_name,
-        variant: normalized.variant,
-        packSize: normalized.pack_size,
+        barcode,
+        productName,
+        variant,
+        packSize,
       }, candidates);
       const record: SkuMapping = {
         id: crypto.randomUUID(),
         organization_id: context.organization.id,
         source_type: job.source_type,
         source_sku: normalized.sku,
-        source_barcode: normalized.barcode,
-        source_product_name: normalized.product_name,
-        source_variant: normalized.variant,
-        source_pack_size: normalized.pack_size,
+        source_barcode: barcode,
+        source_product_name: productName,
+        source_variant: variant,
+        source_pack_size: packSize,
         master_sku_id: match.skuId,
         status: match.status,
         match_method: match.method,
@@ -251,13 +259,18 @@ export async function completeImport(formData: FormData) {
       await supabase.from("import_jobs").update({ status: "processing" }).eq("organization_id", context.organization.id).eq("id", job.id);
       await processImportJob(supabase, context.organization, job);
       try {
-        await runOperatingLoop(supabase, context.organization, context.user.id);
+        if (String(job.source_type) === "purchase_orders") {
+          await runPurchaseOrderIntelligence(supabase as any, context.organization.id, context.user.id);
+        } else {
+          await runOperatingLoop(supabase, context.organization, context.user.id);
+        }
       } catch (scanError) {
         await supabase.from("import_jobs").update({
           error_summary: `Data imported. Operations scan needs retry: ${message(scanError)}`,
         }).eq("organization_id", context.organization.id).eq("id", job.id);
       }
       revalidatePath("/app/inventory");
+      revalidatePath("/app/purchase-orders");
       revalidatePath("/app/ops");
       revalidatePath("/app/value");
       revalidatePath(path);
