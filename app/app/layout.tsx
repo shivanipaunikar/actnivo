@@ -4,6 +4,7 @@ import { requireAppContext } from "@/lib/auth/session";
 import "./polish.css";
 import "./sidebar-polish.css";
 import "./interaction-polish.css";
+import "./luxury-mvp.css";
 
 export default async function ProtectedAppLayout({ children }: { children: React.ReactNode }) {
   const context = await requireAppContext();
