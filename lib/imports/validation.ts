@@ -253,11 +253,12 @@ export function validateRows(sourceType: SupportedImportSourceType, rows: RawImp
         : validatePurchaseOrder(raw, mapping);
     const duplicate = seen.has(result.duplicateKey);
     seen.add(result.duplicateKey);
+    const duplicateMessage = sourceType === "purchase_orders" ? "Duplicate PO/SKU row in this file" : "Duplicate row in this file";
     return {
       rowNumber: index + 2,
       raw,
       normalized: result.errors.length ? null : result.normalized,
-      errors: duplicate ? [...result.errors, "Duplicate PO/SKU row in this file"] : result.errors,
+      errors: duplicate ? [...result.errors, duplicateMessage] : result.errors,
       duplicate,
       rowHash: sha256(JSON.stringify(result.normalized ?? raw)),
     };
