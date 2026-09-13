@@ -5,6 +5,19 @@ import { getOrdersWorkspace } from "@/lib/data/orders";
 
 const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
 
+const orderRowStyle = {
+  display: "grid",
+  gridTemplateColumns: "2fr .8fr .6fr .8fr .4fr",
+  gap: 14,
+  alignItems: "center",
+  minHeight: 56,
+  padding: "11px 24px",
+  borderBottom: "1px solid var(--border)",
+  color: "var(--text-secondary)",
+  fontSize: 9,
+  textDecoration: "none",
+} as const;
+
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ imported?: string }> }) {
   const [{ organization }, query] = await Promise.all([requireAppContext(), searchParams]);
   const supabase = await createClient();
@@ -24,7 +37,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     <section className="product-card" style={{ marginTop: 18 }}>
       <header><div><small>ORDER HEALTH</small><h2>Unified order queue</h2></div><span>{data.orders.length} orders</span></header>
       {data.orders.length ? <div className="simple-table"><div className="simple-table-head"><span>Order</span><span>Channel</span><span>Fulfillment</span><span>Value</span><span>Risk</span></div>
-        {data.orders.map((order: any) => <Link href={`/app/orders/${order.id}`} key={order.id} style={{ color: "inherit", textDecoration: "none" }}>
+        {data.orders.map((order: any) => <Link href={`/app/orders/${order.id}`} key={order.id} style={orderRowStyle}>
           <span><strong>{order.external_order_id}</strong><small>{new Date(order.order_placed_at).toLocaleString("en-IN")}</small></span>
           <span>{order.channel ? String(order.channel).replaceAll("_", " ") : "Direct"}</span>
           <span>{String(order.fulfillment_status).replaceAll("_", " ")}</span>
