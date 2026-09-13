@@ -1,0 +1,36 @@
+import Link from "next/link";
+import { requireAppContext } from "@/lib/auth/session";
+import { createClient } from "@/lib/supabase/server";
+import { getOrdersWorkspace } from "@/lib/data/orders";
+
+const money = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
+
+export default async function OrdersPage() {
+  const { organization } = await requireAppContext();
+  const supabase = await createClient();
+  const data = await getOrdersWorkspace(supabase as any, organization.id);
+
+  return <div className="product-page">
+    <header className="product-page-header"><div><p>OPERATIONS</p><h1>Orders</h1><span>Unified fulfillment health across channels, ranked by financial exposure.</span></div><Link href="/app/integrations">Manage data sources →</Link></header>
+    <section className="saas-metrics">
+      <article><small>OPEN ORDERS</small><strong>{data.summary.openOrders}</strong><p>{money.format(data.summary.openOrderValue)} open value</p></article>
+      <article><small>REVENUE AT RISK</small><strong>{money.format(data.summary.revenueAtRisk)}</strong><p>Across active order exceptions</p></article>
+      <article><small>DELAYED</small><strong>{data.summary.delayedOrders}</strong><p>Past promised ship time</p></article>
+      <article><small>STUCK</small><strong>{data.summary.stuckOrders}</strong><p>24h+ past promised shipment</p></article>
+      <article><small>RTO RISK</small><strong>{data.summary.rtoRiskOrders}</strong><p>COD delivery-attempt risk</p></article>
+    </section>
+
+    <section className="product-card" style={{ marginTop: 18 }}>
+      <header><div><small>ORDER HEALTH</small><h2>Unified order queue</h2></div><span>{data.orders.length} orders</span></header>
+      {data.orders.length ? <div className="simple-table"><div className="simple-table-head"><span>Order</span><span>Channel</span><span>Fulfillment</span><span>Value</span><span>Risk</span></div>
+        {data.orders.map((order: any) => <Link href={`/app/orders/${order.id}`} key={order.id} style={{ color: "inherit", textDecoration: "none" }}>
+          <span><strong>{order.external_order_id}</strong><small>{new Date(order.order_placed_at).toLocaleString("en-IN")}</small></span>
+          <span>{order.channel ? String(order.channel).replaceAll("_", " ") : "Direct"}</span>
+          <span>{String(order.fulfillment_status).replaceAll("_", " ")}</span>
+          <span>{money.format(Number(order.order_value ?? 0))}</span>
+          <span>{order.exception ? <><strong>{order.exception.type.replaceAll("_", " ")}</strong><small>{money.format(order.exception.revenueAtRisk)} at risk</small></> : "Healthy"}</span>
+        </Link>)}
+      </div> : <div className="product-empty"><span>▱</span><h3>No orders connected yet.</h3><p>Orders will use the same normalized model whether they arrive by API, OMS, marketplace connector, or file bootstrap.</p></div>}
+    </section>
+  </div>;
+}
