@@ -5,6 +5,16 @@ alter table public.issues add column if not exists order_id uuid;
 alter table public.issues add constraint issues_order_fk foreign key (order_id, organization_id)
   references public.orders(id, organization_id) on delete cascade;
 
+-- The original active-issue index keyed only by SKU/location/channel. That is
+-- correct for inventory/supply issues, but two customer orders can share those
+-- dimensions. Keep the legacy behavior only for non-order issues and give
+-- orders their own identity key.
+drop index if exists public.issues_one_active_stockout_key;
+create unique index issues_one_active_stockout_key
+  on public.issues (organization_id, type, sku_id, location_id, channel)
+  nulls not distinct
+  where order_id is null and status in ('open', 'needs_approval', 'running');
+
 create index if not exists issues_order_idx on public.issues(order_id, organization_id);
 create unique index if not exists issues_one_active_order_key
   on public.issues (organization_id, type, order_id)
