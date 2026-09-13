@@ -12,6 +12,7 @@ const message = (error: unknown) => error instanceof Error ? error.message : "Or
 
 export async function importOrders(formData: FormData) {
   const context = await requireAppContext();
+  let target = "/app/orders/import";
   try {
     assertCanManageInventory(context.role);
     const file = formData.get("file");
@@ -29,8 +30,9 @@ export async function importOrders(formData: FormData) {
     });
     revalidatePath("/app/orders");
     revalidatePath("/app/ai-copilot");
-    redirect(`/app/orders?imported=${result.imported}`);
+    target = `/app/orders?imported=${result.imported}`;
   } catch (error) {
-    redirect(`/app/orders/import?error=${encodeURIComponent(message(error))}`);
+    target = `/app/orders/import?error=${encodeURIComponent(message(error))}`;
   }
+  redirect(target);
 }
