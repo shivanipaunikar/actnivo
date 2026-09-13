@@ -121,6 +121,14 @@
 .copilot-bubble p { white-space: pre-wrap; margin: 5px 0 0; line-height: 1.58; color: #33333d; }
 .copilot-sources { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .copilot-sources a { font-size: 12px; border: 1px solid #dedee7; border-radius: 8px; padding: 6px 8px; text-decoration: none; color: #514bd7; background: #fff; }
+.copilot-proposals { display: grid; gap: 8px; margin-top: 14px; }
+.copilot-proposal { border: 1px solid #dddafc; background: #faf9ff; border-radius: 11px; padding: 11px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.copilot-proposal > div { display: flex; flex-direction: column; gap: 3px; }
+.copilot-proposal strong { font-size: 13px; color: #292933; }
+.copilot-proposal span { font-size: 12px; color: #747480; }
+.copilot-proposal button { border: 1px solid #5b55f7; background: #fff; color: #514bd7; border-radius: 8px; padding: 8px 10px; font-weight: 700; white-space: nowrap; }
+.copilot-proposal button:hover { background: #5b55f7; color: #fff; }
+.copilot-proposal button:disabled { opacity: .6; cursor: wait; }
 .copilot-composer { border-top: 1px solid #ececf2; padding: 16px 18px 18px; background: #fcfcfe; }
 .copilot-composer textarea { width: 100%; resize: none; border: 1px solid #dcdce6; border-radius: 12px; padding: 13px 14px; font: inherit; outline: none; background: #fff; }
 .copilot-composer textarea:focus { border-color: #8580f7; box-shadow: 0 0 0 3px rgba(91,85,247,.1); }
@@ -133,6 +141,8 @@
 .copilot-guardrails strong { font-size: 13px; }
 .copilot-guardrails span { color: #7b7b85; font-size: 12px; line-height: 1.45; }
 .copilot-guardrails > a { display: inline-flex; margin-top: 14px; color: #514bd7; text-decoration: none; font-weight: 700; }
+.copilot-action-approval { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.copilot-action-approval small { max-width: 620px; color: #686873; line-height: 1.45; }
 
 @media (max-width: 1200px) {
   .saas-content .qc-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -157,6 +167,7 @@
   .saas-content .qc-filters button { width: 100%; }
   .copilot-thread { padding: 16px; }
   .copilot-bubble { max-width: 92%; }
+  .copilot-proposal { align-items: stretch; flex-direction: column; }
   .copilot-composer > div { align-items: stretch; flex-direction: column; }
-  .copilot-composer button { width: 100%; }
+  .copilot-composer button, .copilot-proposal button { width: 100%; }
 }
