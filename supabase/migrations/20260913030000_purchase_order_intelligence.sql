@@ -9,6 +9,9 @@ create type public.purchase_order_status as enum (
   'DRAFT', 'OPEN', 'ACKNOWLEDGED', 'PARTIALLY_RECEIVED', 'RECEIVED', 'LATE', 'CANCELLED'
 );
 
+alter table public.connections
+  add constraint connections_id_organization_key unique (id, organization_id);
+
 create table public.purchase_orders (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references public.organizations(id) on delete cascade,
@@ -58,15 +61,11 @@ create table public.purchase_order_lines (
     references public.purchase_orders(id, organization_id) on delete cascade,
   constraint purchase_order_lines_sku_fk foreign key (sku_id, organization_id)
     references public.skus(id, organization_id) on delete restrict,
+  constraint purchase_order_lines_source_key unique (organization_id, purchase_order_id, external_line_id),
+  constraint purchase_order_lines_sku_key unique (organization_id, purchase_order_id, sku_id),
   constraint purchase_order_lines_quantity_check check (received_quantity <= coalesce(confirmed_quantity, ordered_quantity))
 );
 
-create unique index purchase_order_lines_source_key
-  on public.purchase_order_lines(organization_id, purchase_order_id, external_line_id)
-  where external_line_id is not null;
-create unique index purchase_order_lines_fallback_key
-  on public.purchase_order_lines(organization_id, purchase_order_id, sku_id)
-  where external_line_id is null;
 create index purchase_orders_org_status_arrival_idx
   on public.purchase_orders(organization_id, status, expected_delivery_date);
 create index purchase_order_lines_org_po_idx
@@ -104,9 +103,10 @@ begin
 
   update public.purchase_orders
   set status = case
+    when status = 'CANCELLED' then 'CANCELLED'::public.purchase_order_status
     when total_lines > 0 and complete_lines = total_lines then 'RECEIVED'::public.purchase_order_status
     when received_lines > 0 then 'PARTIALLY_RECEIVED'::public.purchase_order_status
-    when expected_delivery_date < current_date and status not in ('CANCELLED','RECEIVED') then 'LATE'::public.purchase_order_status
+    when expected_delivery_date < current_date then 'LATE'::public.purchase_order_status
     else status
   end,
   actual_delivery_date = case
@@ -119,8 +119,11 @@ end;
 $$;
 
 revoke execute on function private.sync_purchase_order_status() from public, anon, authenticated;
-create trigger purchase_order_lines_sync_status
-after insert or update of received_quantity, confirmed_quantity or delete on public.purchase_order_lines
+create trigger purchase_order_lines_sync_status_insert_delete
+after insert or delete on public.purchase_order_lines
+for each row execute function private.sync_purchase_order_status();
+create trigger purchase_order_lines_sync_status_update
+after update of received_quantity, confirmed_quantity, ordered_quantity, expected_delivery_date on public.purchase_order_lines
 for each row execute function private.sync_purchase_order_status();
 
 alter table public.purchase_orders enable row level security;
