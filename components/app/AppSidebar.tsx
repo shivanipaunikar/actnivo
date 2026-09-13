@@ -35,6 +35,7 @@ export function AppSidebar({ organizationName, userName, email, role }: { organi
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const initials = userName.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const activeFor = (href: string) => pathname === href || (["/app/actions", "/app/ops", "/app/orders", "/app/purchase-orders", "/app/returns-rto"].includes(href) && pathname.startsWith(`${href}/`)) || (href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping"));
 
   return (
     <>
@@ -48,19 +49,9 @@ export function AppSidebar({ organizationName, userName, email, role }: { organi
         <button className="saas-sidebar-collapse" type="button" aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} onClick={() => setCollapsed((value) => !value)}>{collapsed ? "›" : "‹"}</button>
         <div className="saas-workspace"><span>{organizationName.slice(0, 1).toUpperCase()}</span><div><small>WORKSPACE</small><strong>{organizationName}</strong></div></div>
         <nav aria-label="Application navigation">
-          {navigation.map((item, index) => "group" in item ? (
-            <p key={`${item.group}-${index}`}>{item.group}</p>
-          ) : (
-            <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} aria-current={pathname === item.href ? "page" : undefined} className={pathname === item.href || (item.href === "/app/inventory" && pathname.startsWith("/app/inventory/") && !pathname.startsWith("/app/inventory/sku-mapping")) || (item.href === "/app/actions" && pathname.startsWith("/app/actions/")) || (item.href === "/app/ops" && pathname.startsWith("/app/ops/")) ? "active" : ""} onClick={() => setOpen(false)}>
-              <span aria-hidden="true">{item.icon}</span><strong>{item.label}</strong>
-            </Link>
-          ))}
+          {navigation.map((item, index) => "group" in item ? <p key={`${item.group}-${index}`}>{item.group}</p> : <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} aria-current={activeFor(item.href) ? "page" : undefined} className={activeFor(item.href) ? "active" : ""} onClick={() => setOpen(false)}><span aria-hidden="true">{item.icon}</span><strong>{item.label}</strong></Link>)}
         </nav>
-        <div className="saas-user">
-          <span>{initials || "A"}</span>
-          <div><strong>{userName}</strong><small>{role.replace("_", " ")} · {email}</small></div>
-          <form action="/logout" method="post"><button type="submit" aria-label="Sign out">↗</button></form>
-        </div>
+        <div className="saas-user"><span>{initials || "A"}</span><div><strong>{userName}</strong><small>{role.replace("_", " ")} · {email}</small></div><form action="/logout" method="post"><button type="submit" aria-label="Sign out">↗</button></form></div>
       </aside>
     </>
   );
