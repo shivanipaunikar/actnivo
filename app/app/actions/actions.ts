@@ -9,8 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 function message(error: unknown) { return error instanceof Error ? error.message : "Something went wrong."; }
 
 async function transition(db: any, organizationId: string, actionId: string, from: string, to: string, values: Record<string, unknown> = {}) {
-  const result = await db.from("actions").update({ status: to, ...values })
-    .eq("organization_id", organizationId).eq("id", actionId).eq("status", from).select("id").single();
+  const result = await db.from("actions").update({ status: to, ...values }).eq("organization_id", organizationId).eq("id", actionId).eq("status", from).select("id").single();
   if (result.error) throw new Error(result.error.message);
 }
 
@@ -20,10 +19,8 @@ export async function approvePreparedAction(formData: FormData) {
   let target = `/app/actions/${actionId}`;
   try {
     assertCanManageInventory(context.role);
-    const supabase = await createClient();
-    const db = supabase as any;
-    const actionResult = await db.from("actions").select("*")
-      .eq("organization_id", context.organization.id).eq("id", actionId).single();
+    const supabase = await createClient(); const db = supabase as any;
+    const actionResult = await db.from("actions").select("*").eq("organization_id", context.organization.id).eq("id", actionId).single();
     if (actionResult.error) throw new Error(actionResult.error.message);
     const action = actionResult.data;
     if (action.status !== "AWAITING_APPROVAL") throw new Error("This action is no longer waiting for approval.");
@@ -31,10 +28,7 @@ export async function approvePreparedAction(formData: FormData) {
 
     await transition(db, context.organization.id, actionId, "AWAITING_APPROVAL", "APPROVED", { approved_by: context.user.id, approved_at: new Date().toISOString() });
     await transition(db, context.organization.id, actionId, "APPROVED", "EXECUTING");
-    await transition(db, context.organization.id, actionId, "EXECUTING", "EXECUTED", {
-      executed_at: new Date().toISOString(),
-      external_reference: `assisted-${String(action.type).toLowerCase()}-${actionId.slice(0, 8)}`,
-    });
+    await transition(db, context.organization.id, actionId, "EXECUTING", "EXECUTED", { executed_at: new Date().toISOString(), external_reference: `assisted-${String(action.type).toLowerCase()}-${actionId.slice(0, 8)}` });
     await transition(db, context.organization.id, actionId, "EXECUTED", "VERIFYING");
 
     let beforeState: Record<string, unknown> = { issue_id: action.issue_id };
@@ -48,6 +42,12 @@ export async function approvePreparedAction(formData: FormData) {
     } else if (action.type === "CREATE_REPLENISHMENT_PLAN") {
       beforeState = { destination_location_id: payload.destination_location_id, requested_quantity: 0 };
       expectedState = { destination_location_id: payload.destination_location_id, requested_quantity: Number(payload.quantity ?? 0) };
+    } else if (action.type === "CREATE_ORDER_RECOVERY_TASK") {
+      beforeState = { order_id: payload.order_id, order_exception_active: true };
+      expectedState = { order_id: payload.order_id, order_exception_active: false };
+    } else if (action.type === "CREATE_RETURN_RECOVERY_TASK") {
+      beforeState = { return_id: payload.return_id, return_exception_active: true, status: payload.status };
+      expectedState = { return_id: payload.return_id, return_exception_active: false };
     }
 
     const issueResult = action.issue_id ? await db.from("issues").select("estimated_revenue_at_risk").eq("organization_id", context.organization.id).eq("id", action.issue_id).maybeSingle() : { data: null, error: null };
@@ -55,40 +55,18 @@ export async function approvePreparedAction(formData: FormData) {
     const existingOutcome = await db.from("action_outcomes").select("id").eq("organization_id", context.organization.id).eq("action_id", actionId).maybeSingle();
     if (existingOutcome.error) throw new Error(existingOutcome.error.message);
     if (!existingOutcome.data) {
-      const outcome = await db.from("action_outcomes").insert({
-        organization_id: context.organization.id,
-        action_id: actionId,
-        before_state: beforeState,
-        expected_state: expectedState,
-        estimated_value_protected: issueResult.data?.estimated_revenue_at_risk ?? "0.00",
-        verification_status: "VERIFYING",
-      });
+      const outcome = await db.from("action_outcomes").insert({ organization_id: context.organization.id, action_id: actionId, before_state: beforeState, expected_state: expectedState, estimated_value_protected: issueResult.data?.estimated_revenue_at_risk ?? "0.00", verification_status: "VERIFYING" });
       if (outcome.error) throw new Error(outcome.error.message);
     }
-
     if (action.issue_id) {
-      const issueUpdate = await db.from("issues").update({ status: "running" })
-        .eq("organization_id", context.organization.id).eq("id", action.issue_id);
+      const issueUpdate = await db.from("issues").update({ status: "running" }).eq("organization_id", context.organization.id).eq("id", action.issue_id);
       if (issueUpdate.error) throw new Error(issueUpdate.error.message);
     }
-    const audit = await db.from("audit_events").insert({
-      organization_id: context.organization.id,
-      actor_id: context.user.id,
-      entity_type: "action",
-      entity_id: actionId,
-      event_type: "copilot_prepared_action_approved",
-      before_state: { status: "AWAITING_APPROVAL" },
-      after_state: { status: "VERIFYING", execution_mode: "ASSISTED", external_action_performed: false },
-    });
+    const audit = await db.from("audit_events").insert({ organization_id: context.organization.id, actor_id: context.user.id, entity_type: "action", entity_id: actionId, event_type: "prepared_action_approved", before_state: { status: "AWAITING_APPROVAL" }, after_state: { status: "VERIFYING", execution_mode: "ASSISTED", external_action_performed: false } });
     if (audit.error) throw new Error(audit.error.message);
 
-    revalidatePath("/app/actions");
-    revalidatePath(`/app/actions/${actionId}`);
-    revalidatePath("/app/ops");
-    revalidatePath("/app/ai-copilot");
+    revalidatePath("/app/actions"); revalidatePath(`/app/actions/${actionId}`); revalidatePath("/app/ops"); revalidatePath("/app/orders"); revalidatePath("/app/returns-rto"); revalidatePath("/app/ai-copilot");
     target = `/app/actions/${actionId}?approved=1`;
-  } catch (error) {
-    target = `/app/actions/${actionId}?error=${encodeURIComponent(message(error))}`;
-  }
+  } catch (error) { target = `/app/actions/${actionId}?error=${encodeURIComponent(message(error))}`; }
   redirect(target);
 }

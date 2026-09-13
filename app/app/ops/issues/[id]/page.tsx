@@ -7,6 +7,7 @@ import { titleCaseChannel } from "@/lib/data/inventory";
 import { createClient } from "@/lib/supabase/server";
 import { approveExpeditePurchaseOrder } from "../../../purchase-orders/actions";
 import { prepareOrderRecoveryTask } from "../../../orders/actions";
+import { prepareReturnRecovery } from "../../../returns-rto/actions";
 import { approveIssue, ignoreIssue, modifyRecommendation } from "../../actions";
 
 const currency = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 });
@@ -22,8 +23,32 @@ export default async function IssueDetailPage({ params, searchParams }: { params
   const metadata = issue.metadata as Record<string, unknown>;
   const isPoIssue = String(issue.type).startsWith("PO_");
   const isOrderIssue = ["ORDER_DELAYED", "ORDER_STUCK", "RTO_RISK"].includes(String(issue.type));
+  const isReturnIssue = ["RETURN_STUCK", "REFUND_DELAYED", "RETURN_RECEIPT_DELAYED"].includes(String(issue.type));
   const recommendationType = String(metadata.recommendation_type ?? "");
   const poNumber = String(metadata.po_number ?? "Purchase order");
+
+  if (isReturnIssue) {
+    const returnNumber = String(metadata.external_return_id ?? "Return/RTO");
+    return <div className="product-page issue-detail-page">
+      <header className="product-page-header"><div><p>OPS INBOX / {String(issue.type).replaceAll("_", " ")}</p><h1>{returnNumber}</h1><span>{String(metadata.kind ?? "RETURN")} · {String(metadata.status ?? "OPEN").replaceAll("_", " ")}</span></div><Link href="/app/ops">← Back to inbox</Link></header>
+      {query.error && <p className="product-alert error">{query.error}</p>}
+      <section className="issue-hero"><div><small>WHAT HAPPENED</small><h2>{issue.title}</h2><p>{issue.summary}</p></div><aside><small>VALUE EXPOSED</small><strong>{currency.format(Number(issue.estimated_revenue_at_risk ?? 0))}</strong><p>Refund amount plus recorded reverse-logistics cost</p></aside></section>
+      <div className="issue-detail-grid">
+        <section className="issue-facts">
+          <article><small>CASE</small><strong>{returnNumber}</strong><p>{String(metadata.kind ?? "RETURN")}</p></article>
+          <article><small>REFUND EXPOSURE</small><strong>{currency.format(Number(metadata.refund_amount ?? 0))}</strong><p>Customer cash/refund value</p></article>
+          <article><small>REVERSE LOGISTICS</small><strong>{currency.format(Number(metadata.reverse_logistics_cost ?? 0))}</strong><p>Recorded operational cost</p></article>
+          <article><small>WHY</small><h3>{String(issue.type).replaceAll("_", " ")}</h3><p>Actnivo uses return status and timestamps to deterministically identify stuck pickup, reverse-transit, or refund delays.</p></article>
+        </section>
+        <section className="issue-action-panel"><small>RECOMMENDED ACTION</small><h2>{String(metadata.recommendation_title ?? "Create return/RTO recovery task")}</h2><p>{String(metadata.recommendation_detail ?? "Prepare an assisted reverse-logistics task.")}</p>
+          <div><span>Execution mode<strong>ASSISTED</strong></span><span>External action<strong>Not performed</strong></span><span>Value exposed<strong>{currency.format(Number(issue.estimated_revenue_at_risk ?? 0))}</strong></span></div>
+          {latestAction ? <Link className="saas-primary" href={`/app/actions/${latestAction.id}`}>View recovery action</Link> : manageable && issue.status !== "ignored" ? <form action={prepareReturnRecovery}><input type="hidden" name="issue_id" value={issue.id} /><button className="saas-primary" type="submit">Prepare recovery task</button></form> : null}
+          {manageable && !["resolved", "ignored"].includes(issue.status) && <form action={ignoreIssue} className="ignore-action"><input type="hidden" name="issue_id" value={issue.id} /><button type="submit">Ignore issue</button></form>}
+        </section>
+      </div>
+      <section className="formula-note"><small>RETURN/RTO EXCEPTION LOGIC</small><p>Status timestamps determine the exception. Refund amount + recorded reverse-logistics cost = value exposed. The LLM does not calculate this classification or amount.</p></section>
+    </div>;
+  }
 
   if (isOrderIssue) {
     const orderNumber = String(metadata.external_order_id ?? order?.external_order_id ?? "Order");

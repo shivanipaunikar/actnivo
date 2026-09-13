@@ -9,7 +9,7 @@ const currency = new Intl.NumberFormat("en-IN", { style: "currency", currency: "
 
 function ApprovalPanel({ actionId, manageable }: { actionId: string; manageable: boolean }) {
   if (!manageable) return <p>Your role can review this proposal but cannot approve operational actions.</p>;
-  return <form action={approvePreparedAction} className="copilot-action-approval"><input type="hidden" name="action_id" value={actionId} /><button className="saas-primary" type="submit">Approve proposed action</button><small>Approval starts assisted execution only. No external API, supplier message, customer contact, carrier action, or marketplace mutation is performed.</small></form>;
+  return <form action={approvePreparedAction} className="copilot-action-approval"><input type="hidden" name="action_id" value={actionId} /><button className="saas-primary" type="submit">Approve proposed action</button><small>Approval starts assisted execution only. No external API, supplier message, customer contact, carrier action, refund, or marketplace mutation is performed.</small></form>;
 }
 
 export default async function ActionDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ approved?: string; error?: string }> }) {
@@ -28,9 +28,17 @@ export default async function ActionDetailPage({ params, searchParams }: { param
   const isExpedite = actionType === "EXPEDITE_PO";
   const isReplenishment = actionType === "CREATE_REPLENISHMENT_PLAN";
   const isOrderRecovery = actionType === "CREATE_ORDER_RECOVERY_TASK";
+  const isReturnRecovery = actionType === "CREATE_RETURN_RECOVERY_TASK";
   const awaitingApproval = action.status === "AWAITING_APPROVAL";
   const manageable = canManageInventory(context.role);
   const preparedByCopilot = String(payload.prepared_by ?? "") === "AI_COPILOT";
+
+  if (isReturnRecovery) return <div className="product-page action-detail-page">
+    <header className="product-page-header"><div><p>ACTIONS / ASSISTED</p><h1>{awaitingApproval ? "Proposed return/RTO recovery" : "Return/RTO recovery task"}</h1><span>{String(payload.external_return_id ?? "Return/RTO")} · {String(payload.kind ?? "RETURN")}</span></div><Link href="/app/actions">← All actions</Link></header>
+    {query.error && <p className="product-alert error">{query.error}</p>}{query.approved && <p className="product-alert success">Approved. The internal reverse-logistics recovery task is ready.</p>}
+    <section className="assisted-banner"><span>{awaitingApproval ? "RETURNS & RTO PROPOSAL" : "ASSISTED EXECUTION"}</span><h2>{awaitingApproval ? "Review before approval." : "No refund, customer, carrier, OMS, or marketplace action was performed."}</h2><p>{awaitingApproval ? "The proposal is based on deterministic return/RTO exception logic. Approval creates an internal task only." : "Complete the recovery step in your operational system. Actnivo verifies the outcome when refreshed return/RTO data clears the exception."}</p>{awaitingApproval && <ApprovalPanel actionId={action.id} manageable={manageable} />}</section>
+    <div className="action-detail-grid"><section><small>INTERNAL TASK</small><h2>{String(payload.internal_task ?? "Review and recover the affected return/RTO case.")}</h2><div className="action-quantity"><span>CASE<strong>{String(payload.external_return_id ?? "—")}</strong></span><span>KIND<strong>{String(payload.kind ?? "—")}</strong></span><span>REFUND EXPOSURE<strong>{currency.format(Number(payload.refund_amount ?? 0))}</strong></span></div></section><aside><small>{awaitingApproval ? "PROPOSAL STATUS" : "VERIFICATION"}</small><span className={`action-state ${action.status.toLowerCase()}`}>{action.status.replaceAll("_", " ")}</span><h3>{awaitingApproval ? "Waiting for operator approval" : outcome?.verification_status === "SUCCESS" ? "Recovery verified" : "Waiting for refreshed reverse-logistics data"}</h3><p>{awaitingApproval ? "No execution lifecycle has started yet." : "When the return/RTO exception clears, Actnivo marks this action verified."}</p><dl><div><dt>Estimated protected</dt><dd>{currency.format(Number(outcome?.estimated_value_protected ?? 0))}</dd></div><div><dt>Actual protected</dt><dd>{outcome?.actual_value_protected == null ? "Pending" : currency.format(Number(outcome.actual_value_protected))}</dd></div></dl><Link href={`/app/returns-rto/${String(payload.return_id)}`}>View return/RTO →</Link></aside></div>
+  </div>;
 
   if (isOrderRecovery) return <div className="product-page action-detail-page">
     <header className="product-page-header"><div><p>ACTIONS / ASSISTED</p><h1>{awaitingApproval ? "Proposed order recovery" : "Order recovery task"}</h1><span>{String(payload.external_order_id ?? "Order")} · {String(payload.issue_type ?? "Order exception").replaceAll("_", " ")}</span></div><Link href="/app/actions">← All actions</Link></header>
