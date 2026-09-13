@@ -1,0 +1,196 @@
+.saas-shell,
+.saas-shell * {
+  box-sizing: border-box;
+}
+
+.saas-content {
+  min-width: 0;
+}
+
+.saas-content button,
+.saas-content a,
+.saas-content select,
+.saas-content input {
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    transform 90ms ease,
+    opacity 140ms ease;
+}
+
+.saas-content button:not(:disabled),
+.saas-content a[href],
+.saas-content summary {
+  cursor: pointer;
+}
+
+.saas-content button:not(:disabled):active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.saas-content button.is-pending {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.saas-content button.is-pending::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  margin-left: 8px;
+  display: inline-block;
+  vertical-align: -1px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: actnivo-spin 700ms linear infinite;
+}
+
+@keyframes actnivo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.saas-content .product-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.saas-content .qc-summary-grid,
+.saas-content .qc-channel-grid,
+.saas-content .qc-lower-grid {
+  align-items: stretch;
+}
+
+.saas-content .qc-summary-grid {
+  gap: 12px;
+}
+
+.saas-content .qc-channel-grid,
+.saas-content .qc-lower-grid {
+  gap: 16px;
+}
+
+.saas-content .qc-section {
+  margin-top: 18px;
+}
+
+.saas-content .qc-filters {
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.saas-content .qc-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.saas-content .qc-replenishment-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+  .saas-content .qc-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .saas-content .qc-channel-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .saas-content .qc-summary-grid,
+  .saas-content .qc-channel-grid,
+  .saas-content .qc-lower-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .saas-content .qc-filters label,
+  .saas-content .qc-filters select,
+  .saas-content .qc-filters button {
+    width: 100%;
+  }
+}
+/* Primary CTA contrast */
+.saas-content .saas-primary {
+  background: #5b55f7;
+  color: #ffffff !important;
+  border: 1px solid #5b55f7;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.saas-content .saas-primary:hover {
+  background: #4943e8;
+  border-color: #4943e8;
+  color: #ffffff !important;
+}
+
+/* Cleaner file upload */
+.saas-content .file-drop {
+  min-height: 210px;
+  border: 1.5px dashed #cfd0da;
+  border-radius: 18px;
+  background: #fafafd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: center;
+  padding: 32px;
+}
+
+.saas-content .file-drop:hover {
+  border-color: #5b55f7;
+  background: #f7f6ff;
+}
+
+.saas-content .file-drop input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.saas-content .file-drop span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  background: #5b55f7;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.saas-content .file-drop small {
+  color: #7a7a85;
+  font-size: 13px;
+}
+
+.saas-content .file-drop::before {
+  content: "↑";
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #efeeff;
+  color: #5b55f7;
+  font-size: 22px;
+  font-weight: 700;
+}
