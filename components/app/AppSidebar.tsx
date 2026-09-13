@@ -30,6 +30,7 @@ const navigation = [
   { label: "Settings", href: "/app/settings", icon: "⚙" },
 ] as const;
 
+// Client sidebar: mobile drawer today, desktop collapse controls can build on this stateful shell.
 export function AppSidebar({
   organizationName,
   userName,
