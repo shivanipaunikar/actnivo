@@ -1,0 +1,654 @@
+/* Actnivo MVP application visual system.
+   Loaded only inside /app so the public marketing site stays untouched. */
+
+.saas-shell {
+  --app-bg: #f6f6f8;
+  --app-panel: rgba(255, 255, 255, 0.94);
+  --app-panel-solid: #ffffff;
+  --app-panel-subtle: #fafafd;
+  --app-ink: #17171d;
+  --app-body: #555561;
+  --app-muted: #8a8a96;
+  --app-line: #e8e8ee;
+  --app-line-strong: #ddddE7;
+  --app-accent: #5b55f7;
+  --app-accent-hover: #4d47e8;
+  --app-accent-soft: #f1f0ff;
+  --app-success: #17875c;
+  --app-success-soft: #edf9f4;
+  --app-warning: #b87516;
+  --app-warning-soft: #fff7e9;
+  --app-danger: #c84d58;
+  --app-danger-soft: #fff1f2;
+  --app-shadow-sm: 0 1px 2px rgba(19, 19, 26, 0.03), 0 7px 22px rgba(19, 19, 26, 0.045);
+  --app-shadow-md: 0 2px 4px rgba(19, 19, 26, 0.03), 0 18px 50px rgba(19, 19, 26, 0.065);
+  --app-radius-sm: 10px;
+  --app-radius: 16px;
+  --app-radius-lg: 22px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 78% -10%, rgba(104, 96, 255, 0.08), transparent 31rem),
+    linear-gradient(180deg, #fafafd 0%, var(--app-bg) 30%, var(--app-bg) 100%);
+  color: var(--app-ink);
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.005em;
+}
+
+.saas-content {
+  min-height: 100vh;
+  background: transparent;
+  color: var(--app-ink);
+}
+
+.saas-content .product-page,
+.saas-content .dashboard,
+.saas-content > .product-page {
+  width: min(100%, 1540px);
+  margin: 0 auto;
+  padding: 38px clamp(24px, 3vw, 48px) 72px;
+}
+
+/* Page titles */
+.saas-content .product-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 28px;
+  margin: 0 0 26px;
+  padding: 0 2px;
+}
+
+.saas-content .product-page-header > div > p,
+.saas-content .product-page-header small,
+.saas-content .kicker {
+  margin: 0 0 9px;
+  color: #716bf0;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.saas-content .product-page-header h1,
+.saas-content .welcome-row h1 {
+  margin: 0;
+  color: #15151b;
+  font-size: clamp(30px, 3vw, 42px);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+}
+
+.saas-content .product-page-header > div > span,
+.saas-content .product-page-header > div > p:last-child,
+.saas-content .welcome-row > div > p:last-child {
+  display: block;
+  margin-top: 10px;
+  max-width: 760px;
+  color: var(--app-body);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.saas-content .product-page-header > a:not(.saas-primary) {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  color: #514bd9;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Universal cards */
+.saas-content .product-card,
+.saas-content .settings-card,
+.saas-content .panel,
+.saas-content .activity,
+.saas-content .metric,
+.saas-content .qc-card,
+.saas-content .qc-summary-card,
+.saas-content .qc-channel-card,
+.saas-content .integration-source-grid > article,
+.saas-content .autopilot-policy-card {
+  border: 1px solid var(--app-line) !important;
+  border-radius: var(--app-radius) !important;
+  background: var(--app-panel) !important;
+  box-shadow: var(--app-shadow-sm) !important;
+}
+
+.saas-content .product-card {
+  overflow: hidden;
+}
+
+.saas-content .product-card > header,
+.saas-content .settings-card > header {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid #ededf2;
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(252,252,254,.94));
+}
+
+.saas-content .product-card > header h2,
+.saas-content .settings-card > header h2,
+.saas-content .panel-title h2 {
+  margin: 4px 0 0;
+  color: #1b1b22;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.saas-content .product-card > header small,
+.saas-content .settings-card > header small {
+  color: #777184;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.saas-content .product-card > header p,
+.saas-content .settings-card > header p {
+  margin: 7px 0 0;
+  color: var(--app-body);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* Metrics: one coherent visual language across Dashboard, Analytics, Value, Orders, Returns, etc. */
+.saas-content .saas-metrics,
+.saas-content .metric-grid,
+.saas-content .value-metric-grid {
+  gap: 12px !important;
+}
+
+.saas-content .saas-metrics > article,
+.saas-content .value-metric-grid > article,
+.saas-content .metric {
+  min-height: 132px;
+  padding: 20px !important;
+  border: 1px solid var(--app-line) !important;
+  border-radius: var(--app-radius) !important;
+  background: linear-gradient(180deg, #fff 0%, #fcfcfe 100%) !important;
+  box-shadow: var(--app-shadow-sm) !important;
+}
+
+.saas-content .saas-metrics small,
+.saas-content .value-metric-grid small,
+.saas-content .metric-top {
+  color: #7c7c88 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .09em !important;
+  text-transform: uppercase;
+}
+
+.saas-content .saas-metrics strong,
+.saas-content .value-metric-grid strong,
+.saas-content .metric > strong,
+.saas-content .metric-main strong {
+  display: block;
+  margin-top: 15px;
+  color: #17171d !important;
+  font-size: clamp(24px, 2.25vw, 32px) !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.045em !important;
+}
+
+.saas-content .saas-metrics p,
+.saas-content .value-metric-grid p,
+.saas-content .metric p {
+  margin: 8px 0 0 !important;
+  color: #888893 !important;
+  font-size: 11px !important;
+  line-height: 1.45;
+}
+
+/* Inputs */
+.saas-content input,
+.saas-content select,
+.saas-content textarea {
+  min-height: 42px;
+  border: 1px solid #dedef0;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--app-ink);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  box-shadow: inset 0 1px 2px rgba(15,15,24,.018);
+}
+
+.saas-content input,
+.saas-content select {
+  padding: 0 12px;
+}
+
+.saas-content textarea {
+  padding: 11px 12px;
+}
+
+.saas-content input:hover,
+.saas-content select:hover,
+.saas-content textarea:hover {
+  border-color: #cac9d8;
+}
+
+.saas-content input:focus,
+.saas-content select:focus,
+.saas-content textarea:focus {
+  border-color: #8e88fa;
+  box-shadow: 0 0 0 4px rgba(91,85,247,.09);
+}
+
+.saas-content input:disabled,
+.saas-content select:disabled,
+.saas-content textarea:disabled {
+  color: #9999a3;
+  background: #f5f5f7;
+  cursor: not-allowed;
+}
+
+.saas-content label {
+  color: #292932;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.saas-content label > span {
+  display: block;
+  margin: 4px 0 8px;
+  color: #858590;
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.saas-content .settings-card form {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px 26px;
+}
+
+/* Buttons */
+.saas-content button,
+.saas-content .saas-primary,
+.saas-content a.saas-primary {
+  border-radius: 10px;
+}
+
+.saas-content .saas-primary,
+.saas-content a.saas-primary {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid var(--app-accent) !important;
+  background: linear-gradient(180deg, #655ffa 0%, #554ff1 100%) !important;
+  color: #fff !important;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 7px 18px rgba(91,85,247,.18), inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.saas-content .saas-primary:hover,
+.saas-content a.saas-primary:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, #5c56f4 0%, #4943e5 100%) !important;
+  box-shadow: 0 10px 24px rgba(91,85,247,.22);
+}
+
+.saas-content button:not(.saas-primary) {
+  min-height: 36px;
+  border: 1px solid #e0e0e8;
+  border-radius: 9px;
+  background: #fff;
+}
+
+.saas-content button:not(.saas-primary):hover:not(:disabled) {
+  border-color: #c9c7db;
+  background: #faf9ff;
+}
+
+/* Tables */
+.saas-content .simple-table,
+.saas-content .qc-table-scroll {
+  overflow-x: auto;
+  border-radius: 0 0 var(--app-radius) var(--app-radius);
+}
+
+.saas-content .simple-table > div,
+.saas-content .qc-table tbody tr {
+  border-top-color: #eeeeF3 !important;
+}
+
+.saas-content .simple-table > div:not(.simple-table-head) {
+  min-height: 62px;
+  padding-top: 13px !important;
+  padding-bottom: 13px !important;
+  background: #fff;
+}
+
+.saas-content .simple-table > div:not(.simple-table-head):hover {
+  background: #fbfaff;
+}
+
+.saas-content .simple-table-head,
+.saas-content .qc-table thead {
+  background: #fafafd !important;
+  color: #858590 !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .065em;
+  text-transform: uppercase;
+}
+
+.saas-content .simple-table strong,
+.saas-content table strong {
+  color: #24242b;
+  font-weight: 700;
+}
+
+.saas-content .simple-table small,
+.saas-content table small {
+  color: #92929c;
+}
+
+/* Status pills and chips */
+.saas-content [class*="badge"],
+.saas-content [class*="pill"],
+.saas-content [class*="chip"] {
+  border-radius: 999px !important;
+  font-weight: 700;
+}
+
+/* Empty states */
+.saas-content .inventory-empty,
+.saas-content .product-empty {
+  border: 1px dashed #dcdbe7;
+  border-radius: var(--app-radius-lg);
+  background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(247,246,255,.92));
+  padding: clamp(42px, 7vw, 76px) 28px;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+.saas-content .inventory-empty > span,
+.saas-content .product-empty > span {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dedbff;
+  border-radius: 15px;
+  background: #f3f1ff;
+  color: var(--app-accent);
+  font-size: 22px;
+  box-shadow: 0 9px 25px rgba(91,85,247,.09);
+}
+
+.saas-content .inventory-empty h2,
+.saas-content .product-empty h3 {
+  margin: 7px 0 7px;
+  color: #202027;
+  font-size: 20px;
+  letter-spacing: -0.025em;
+}
+
+.saas-content .inventory-empty p,
+.saas-content .product-empty p {
+  max-width: 640px;
+  margin: 0 auto 18px;
+  color: #74747e;
+  line-height: 1.55;
+}
+
+/* Alerts */
+.saas-content .product-alert {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--app-line);
+  border-radius: 11px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.saas-content .product-alert.success {
+  border-color: #ccebdd;
+  background: var(--app-success-soft);
+  color: #176b4b;
+}
+
+.saas-content .product-alert.error {
+  border-color: #f0cdd1;
+  background: var(--app-danger-soft);
+  color: #9f3f49;
+}
+
+/* File import surfaces */
+.saas-content .file-drop {
+  min-height: 230px;
+  border: 1.5px dashed #d3d1df !important;
+  border-radius: var(--app-radius-lg) !important;
+  background: linear-gradient(145deg, #fff, #faf9ff) !important;
+}
+
+.saas-content .file-drop:hover,
+.saas-content .file-drop.has-file {
+  border-color: #aaa5fb !important;
+  background: linear-gradient(145deg, #fff, #f6f4ff) !important;
+  box-shadow: 0 12px 34px rgba(91,85,247,.07);
+}
+
+/* Copilot */
+.saas-content .copilot-shell {
+  gap: 20px;
+}
+
+.saas-content .copilot-main,
+.saas-content .copilot-guardrails {
+  border: 1px solid var(--app-line);
+  border-radius: var(--app-radius-lg);
+  background: rgba(255,255,255,.96);
+  box-shadow: var(--app-shadow-md);
+}
+
+.saas-content .copilot-head {
+  background: linear-gradient(180deg,#fff,#fdfcff);
+}
+
+.saas-content .copilot-orb {
+  background: radial-gradient(circle at 30% 25%, #ffffff, #edeaff 70%);
+  box-shadow: 0 16px 42px rgba(91,85,247,.18);
+}
+
+.saas-content .copilot-bubble {
+  border-color: #e5e4ed;
+  box-shadow: 0 5px 16px rgba(20,20,30,.035);
+}
+
+/* Sidebar */
+.saas-sidebar {
+  background:
+    radial-gradient(circle at 20% -5%, rgba(118,111,255,.22), transparent 17rem),
+    linear-gradient(180deg, #18181f 0%, #111116 100%) !important;
+  border-right: 1px solid rgba(255,255,255,.06);
+  box-shadow: 12px 0 36px rgba(17,17,24,.07);
+}
+
+.saas-sidebar .saas-brand {
+  color: #fff;
+  font-weight: 750;
+  letter-spacing: -.03em;
+}
+
+.saas-sidebar .saas-workspace {
+  border: 1px solid rgba(255,255,255,.09) !important;
+  border-radius: 13px !important;
+  background: rgba(255,255,255,.055) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.saas-sidebar nav p {
+  margin-top: 19px;
+  color: #777784 !important;
+  font-size: 9px !important;
+  font-weight: 800;
+  letter-spacing: .15em;
+}
+
+.saas-sidebar nav a {
+  min-height: 39px;
+  border: 1px solid transparent;
+  border-radius: 10px !important;
+  color: #a8a8b3 !important;
+  font-size: 12px;
+}
+
+.saas-sidebar nav a:hover {
+  border-color: rgba(255,255,255,.06);
+  background: rgba(255,255,255,.055) !important;
+  color: #fff !important;
+}
+
+.saas-sidebar nav a.active {
+  border-color: rgba(137,130,255,.22) !important;
+  background: linear-gradient(90deg, rgba(91,85,247,.22), rgba(91,85,247,.08)) !important;
+  color: #fff !important;
+  box-shadow: inset 2px 0 0 #817bff, 0 8px 22px rgba(0,0,0,.08);
+}
+
+.saas-sidebar nav a > span {
+  color: #a9a5ff;
+}
+
+.saas-sidebar .saas-user {
+  border-top-color: rgba(255,255,255,.075) !important;
+}
+
+.saas-sidebar-collapse {
+  border-color: rgba(255,255,255,.1) !important;
+  background: #202027 !important;
+  color: #d8d8df !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.22) !important;
+}
+
+/* Dashboard-specific legacy surfaces */
+.saas-content .agent-strip {
+  border: 1px solid #dfddfb !important;
+  border-radius: 14px !important;
+  background: linear-gradient(100deg,#f8f7ff,#f2f1ff) !important;
+  box-shadow: var(--app-shadow-sm) !important;
+}
+
+.saas-content .action-card {
+  border: 1px solid var(--app-line) !important;
+  border-left: 3px solid #d69749 !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: var(--app-shadow-sm) !important;
+}
+
+.saas-content .action-card.critical {
+  border-left-color: var(--app-danger) !important;
+}
+
+.saas-content .recommendation {
+  border-color: #dcece6 !important;
+  border-radius: 10px !important;
+  background: #f4faf7 !important;
+}
+
+.saas-content .range-tabs,
+.saas-content [class*="tabs"] {
+  border-radius: 11px;
+}
+
+/* Small hierarchy fixes for text-heavy operational pages. */
+.saas-content h2,
+.saas-content h3,
+.saas-content strong {
+  text-rendering: geometricPrecision;
+}
+
+.saas-content p {
+  text-wrap: pretty;
+}
+
+.saas-content a:focus-visible,
+.saas-content button:focus-visible,
+.saas-content input:focus-visible,
+.saas-content select:focus-visible,
+.saas-content textarea:focus-visible,
+.saas-sidebar a:focus-visible,
+.saas-sidebar button:focus-visible {
+  outline: 3px solid rgba(91,85,247,.22);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .saas-content .product-page,
+  .saas-content .dashboard,
+  .saas-content > .product-page {
+    padding: 30px 24px 56px;
+  }
+
+  .saas-content .saas-metrics,
+  .saas-content .value-metric-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .saas-content .product-page,
+  .saas-content .dashboard,
+  .saas-content > .product-page {
+    padding: 24px 16px 48px;
+  }
+
+  .saas-content .product-page-header {
+    margin-bottom: 20px;
+  }
+
+  .saas-content .product-page-header h1,
+  .saas-content .welcome-row h1 {
+    font-size: 30px;
+  }
+
+  .saas-content .saas-metrics,
+  .saas-content .metric-grid,
+  .saas-content .value-metric-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .saas-content .saas-metrics > article,
+  .saas-content .value-metric-grid > article,
+  .saas-content .metric {
+    min-height: 112px;
+  }
+
+  .saas-content .product-card > header,
+  .saas-content .settings-card > header,
+  .saas-content .settings-card form {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saas-shell *,
+  .saas-shell *::before,
+  .saas-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
